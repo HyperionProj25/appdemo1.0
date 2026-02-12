@@ -11,6 +11,13 @@ import PlayerPitchingMetrics from './pages/PlayerPitchingMetrics'
 import PlayerStrength from './pages/PlayerStrength'
 import PlayerEcosystem from './pages/PlayerEcosystem'
 
+// Public website pages
+import WebsiteLayout from './pages/website/WebsiteLayout'
+import HomePage from './pages/website/HomePage'
+import ProductPage from './pages/website/ProductPage'
+import AboutPage from './pages/website/AboutPage'
+import ContactPage from './pages/website/ContactPage'
+
 // New persona layouts and pages
 import ScoutLayout from './pages/scout/ScoutLayout'
 import ScoutDashboard from './pages/scout/ScoutDashboard'
@@ -69,6 +76,14 @@ export default function App() {
       <Route path="/player/:playerId/pitching/metrics" element={<PlayerPitchingMetrics />} />
       <Route path="/player/:playerId/strength" element={<PlayerStrength />} />
       <Route path="/player/:playerId/ecosystem" element={<PlayerEcosystem />} />
+
+      {/* Public Website */}
+      <Route path="/site" element={<WebsiteLayout />}>
+        <Route index element={<HomePage />} />
+        <Route path="product" element={<ProductPage />} />
+        <Route path="about" element={<AboutPage />} />
+        <Route path="contact" element={<ContactPage />} />
+      </Route>
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
