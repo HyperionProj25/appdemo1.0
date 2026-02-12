@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { usePersona, Persona } from '../context/PersonaContext'
 
 const personas: Array<{ id: Persona; title: string; subtitle: string; description: string; icon: JSX.Element }> = [
@@ -64,6 +64,22 @@ export default function LoginScreen() {
       width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: '#0a0a0a', position: 'relative', overflow: 'hidden',
     }}>
+      {/* Home button */}
+      <Link to="/site" style={{
+        position: 'absolute', top: 24, left: 28, zIndex: 10,
+        display: 'flex', alignItems: 'center', gap: 8,
+        fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '1px',
+        color: 'var(--muted)', textDecoration: 'none', transition: 'color 0.2s',
+      }}
+      onMouseEnter={e => e.currentTarget.style.color = 'var(--accent)'}
+      onMouseLeave={e => e.currentTarget.style.color = 'var(--muted)'}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M19 12H5" /><polyline points="12 19 5 12 12 5" />
+        </svg>
+        Back to Website
+      </Link>
+
       {/* Background streaks */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
