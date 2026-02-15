@@ -1,0 +1,52 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir /s /b \"C:\\\\Users\\\\User\\\\desktop\\\\appdemo1.0\\\\NewBranding\")",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx vite build)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(dir \"C:\\\\Users\\\\User\\\\desktop\\\\appdemo1.0\\\\mockdata\")",
+      "Bash(python3:*)",
+      "Bash(node:*)",
+      "Bash(wc:*)",
+      "Bash(__NEW_LINE_6a2c75fa51f77a61__ python3 /tmp/parse_csv.py \"C:\\\\Users\\\\User\\\\desktop\\\\appdemo1.0\\\\mockdata\\\\mock_live_data.csv\" all)",
+      "Bash(__NEW_LINE_4531c1e397699957__ python3 /tmp/parse_csv.py \"C:\\\\Users\\\\User\\\\desktop\\\\appdemo1.0\\\\mockdata\\\\mock_combined_data.csv\" all)",
+      "Bash(__NEW_LINE_9d903f5c258c34cf__ ls -la \"C:\\\\Users\\\\User\\\\desktop\\\\appdemo1.0\\\\mockdata\"\")",
+      "Bash(ls:*)",
+      "Bash(dir /s /b)",
+      "Bash(npm run build:*)",
+      "Bash(git init:*)",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(start \"\" \"C:\\\\Users\\\\User\\\\desktop\\\\appdemo1.0\\\\pitch-deck.html\")",
+      "Bash(start \"\" \"C:\\\\Users\\\\User\\\\desktop\\\\appdemo1.0\\\\pitch-deck-print.html\")",
+      "Bash(npm run dev:*)",
+      "Bash(powershell:*)",
+      "Bash(timeout:*)",
+      "Bash(curl:*)",
+      "Bash(set BASE_URL=http://localhost:5174)",
+      "Bash(git checkout:*)",
+      "Bash(ping:*)",
+      "Bash(npx vite:*)",
+      "Bash(dir:*)",
+      "WebSearch",
+      "Bash(git status:*)",
+      "WebFetch(domain:www.graphiceagle.com)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:www.bloomberg.com)",
+      "WebFetch(domain:invernessdesignstudio.com)",
+      "WebFetch(domain:blog.logrocket.com)",
+      "WebFetch(domain:uxdesign.cc)",
+      "Bash(grep:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "ticktick"
+  ]
+}

@@ -80,7 +80,9 @@ export default function WebsiteLayout() {
                 <Link to="/site/product">Product Overview</Link>
                 <Link to="/">Scout Demo</Link>
                 <Link to="/">Coach Demo</Link>
+                <Link to="/">Pitching Coach Demo</Link>
                 <Link to="/">Agent Demo</Link>
+                <Link to="/">Player Demo</Link>
               </div>
               <div className="ws-footer-col">
                 <h4>Company</h4>

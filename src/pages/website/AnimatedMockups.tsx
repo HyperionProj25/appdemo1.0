@@ -368,9 +368,9 @@ export function AnimatedPlayerCard() {
           background: 'rgba(224,172,68,0.08)', border: '1px solid rgba(224,172,68,0.2)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontFamily: "'GT America Standard', sans-serif", fontWeight: 700, fontSize: 16, color: '#E0AC44',
-        }}>JD</div>
+        }}>RC</div>
         <div>
-          <div style={{ fontFamily: "'GT America Standard', sans-serif", fontWeight: 700, fontSize: 17, color: '#fff' }}>Jordan Davis</div>
+          <div style={{ fontFamily: "'GT America Standard', sans-serif", fontWeight: 700, fontSize: 17, color: '#fff' }}>Reno Castillo</div>
           <div style={{ fontFamily: "'GT America Mono', monospace", fontSize: 11, color: '#555', letterSpacing: 1 }}>
             OF &middot; R/R &middot; 6'2" 195
           </div>
@@ -510,6 +510,73 @@ export function AnimatedScoutRadar() {
           </g>
         ))}
       </svg>
+    </div>
+  )
+}
+
+/* ================================================
+   Animated Pitching Staff
+   ================================================ */
+
+export function AnimatedPitchingStaff() {
+  const arsenal = [
+    { pitch: 'FF', velo: '94.2', spin: '2340', pct: 85 },
+    { pitch: 'SL', velo: '86.1', spin: '2580', pct: 68 },
+    { pitch: 'CH', velo: '84.7', spin: '1720', pct: 52 },
+    { pitch: 'CB', velo: '79.3', spin: '2810', pct: 45 },
+  ]
+
+  return (
+    <div className="ws-floating-panel ws-floating-panel--roster">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <span style={{ fontFamily: "'GT America Standard', sans-serif", fontWeight: 700, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase' as const, color: '#fff' }}>Pitching Staff</span>
+        <span style={{ fontFamily: "'GT America Mono', monospace", fontSize: 10, color: '#E0AC44' }}>5 Active</span>
+      </div>
+
+      {/* Velocity readout */}
+      <div style={{
+        display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 16,
+        padding: '12px 14px', background: '#111', border: '1px solid #1a1a1a', borderRadius: 6,
+      }}>
+        <span style={{ fontFamily: "'GT America Standard', sans-serif", fontWeight: 700, fontSize: 28, color: '#E0AC44' }}>94.2</span>
+        <span style={{ fontFamily: "'GT America Mono', monospace", fontSize: 10, color: '#555', letterSpacing: 1 }}>MPH AVG</span>
+        <span style={{ marginLeft: 'auto', fontFamily: "'GT America Mono', monospace", fontSize: 10, color: '#4caf50' }}>+1.3</span>
+      </div>
+
+      {/* Arsenal bars */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontFamily: "'GT America Mono', monospace", fontSize: 8, letterSpacing: '1.5px', textTransform: 'uppercase' as const, color: '#444', marginBottom: 10 }}>
+          Arsenal Mix
+        </div>
+        {arsenal.map((p, i) => (
+          <div key={p.pitch} style={{ marginBottom: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontFamily: "'GT America Standard', sans-serif", fontWeight: 700, fontSize: 11, color: '#fff' }}>{p.pitch}</span>
+              <span style={{ fontFamily: "'GT America Mono', monospace", fontSize: 9, color: '#555' }}>{p.velo} mph · {p.spin} rpm</span>
+            </div>
+            <div style={{ height: 4, background: '#1a1a1a', borderRadius: 2, overflow: 'hidden' }}>
+              <div style={{
+                height: '100%',
+                width: `${p.pct}%`,
+                background: i === 0 ? '#E0AC44' : i === 1 ? 'rgba(224,172,68,0.6)' : 'rgba(224,172,68,0.35)',
+                borderRadius: 2,
+                animation: `ws-barGrow 1s ease-out ${1 + i * 0.15}s both`,
+                transformOrigin: 'left',
+              }} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Workload indicator */}
+      <div style={{ padding: '10px 12px', background: 'rgba(224,172,68,0.04)', border: '1px solid rgba(224,172,68,0.12)', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4caf50', flexShrink: 0 }} />
+        <div>
+          <div style={{ fontFamily: "'GT America Mono', monospace", fontSize: 9, color: '#666', lineHeight: 1.5 }}>
+            <span style={{ color: '#E0AC44' }}>ACWR:</span> 0.92 — Optimal workload range
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

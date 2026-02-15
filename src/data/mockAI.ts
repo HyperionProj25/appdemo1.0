@@ -13,21 +13,28 @@ export const playerSuggestions = [
 export function getPlayerAIResponse(query: string, playerName: string): AIResponse {
   const q = query.toLowerCase();
   const firstName = playerName.split(',')[1]?.trim() || playerName;
+  const lastName = playerName.split(',')[0]?.trim() || '';
+  const p = players.find(pl => pl.lastName === lastName) || players.find(pl => pl.firstName === firstName);
+  const ev = p?.avgEV ?? 82;
+  const maxEv = p?.maxEV ?? 97;
+  const bs = p?.avgBS ?? 54;
+  const sw = p?.swings ?? 48;
 
   if (q.includes('improve') || q.includes('most')) {
+    const base = ev - 10;
     const chart: AIChartData = {
       type: 'line',
       points: [
-        { label: '9/13', value: 78 },
-        { label: '9/25', value: 80 },
-        { label: '10/10', value: 83 },
-        { label: '10/25', value: 86 },
-        { label: '11/14', value: 88 },
+        { label: '9/13', value: base },
+        { label: '9/25', value: base + 2 },
+        { label: '10/10', value: base + 5 },
+        { label: '10/25', value: base + 8 },
+        { label: '11/14', value: ev },
       ],
       unit: 'Avg EV (MPH)',
     };
     return {
-      text: `Great question, ${firstName}! Your Exit Velocity has trended up +6.3 MPH over the last 4 sessions \u2014 that\u2019s a strong trajectory. Your barrel consistency is also tightening. I\u2019d recommend continuing with the overload/underload bat drill to keep that momentum going.`,
+      text: `Great question, ${firstName}! Your Exit Velocity has trended up +${(ev - base).toFixed(1)} MPH over the last 4 sessions \u2014 that\u2019s a strong trajectory. Your barrel consistency is also tightening. I\u2019d recommend continuing with the overload/underload bat drill to keep that momentum going.`,
       chart,
     };
   }
@@ -54,14 +61,14 @@ export function getPlayerAIResponse(query: string, playerName: string): AIRespon
       type: 'comparison',
       labels: ['Avg EV', 'Max EV', 'Barrel %'],
       series: [
-        { label: 'You', values: [82, 97, 38], color: 'var(--accent)' },
+        { label: 'You', values: [ev, maxEv, 38], color: 'var(--accent)' },
         { label: 'HS Avg', values: [76, 88, 28], color: '#666' },
         { label: 'College', values: [85, 95, 42], color: '#4caf50' },
       ],
-      yMax: 110,
+      yMax: Math.max(maxEv + 5, 110),
     };
     return {
-      text: `Here\u2019s how you stack up:\n\nYour Max EV (97 mph) already exceeds the college average (95 mph) \u2014 focus on making that your norm, not your ceiling. Barrel consistency (38%) is between HS and College averages.`,
+      text: `Here\u2019s how you stack up:\n\nYour Max EV (${maxEv} mph) ${maxEv >= 95 ? 'already exceeds' : 'is approaching'} the college average (95 mph) \u2014 focus on making that your norm, not your ceiling. Barrel consistency (38%) is between HS and College averages.`,
       chart,
     };
   }
@@ -110,19 +117,20 @@ export function getPlayerAIResponse(query: string, playerName: string): AIRespon
   }
 
   // Default
+  const base = ev - 3;
   const chart: AIChartData = {
     type: 'line',
     points: [
-      { label: '9/13', value: 79 },
-      { label: '9/25', value: 81 },
-      { label: '10/10', value: 80 },
-      { label: '10/25', value: 84 },
-      { label: '11/14', value: 82 },
+      { label: '9/13', value: base - 1 },
+      { label: '9/25', value: base },
+      { label: '10/10', value: base - 1 },
+      { label: '10/25', value: base + 2 },
+      { label: '11/14', value: ev },
     ],
     unit: 'Avg EV (MPH)',
   };
   return {
-    text: `Looking at your dashboard: you\u2019re averaging 82 MPH exit velo with a max of 97 MPH across 48 swings. Your barrel speed sits at 54 MPH. The outfield distribution is even at ~83%, which means you\u2019re using all fields. Keep it up \u2014 consistency is your superpower right now.`,
+    text: `Looking at your dashboard: you\u2019re averaging ${ev} MPH exit velo with a max of ${maxEv} MPH across ${sw} swings. Your barrel speed sits at ${bs} MPH. The outfield distribution is even at ~83%, which means you\u2019re using all fields. Keep it up \u2014 consistency is your superpower right now.`,
     chart,
   };
 }
@@ -140,18 +148,19 @@ export function getFacilityAIResponse(query: string): AIResponse {
   const sorted = [...players].sort((a, b) => b.maxEV - a.maxEV);
 
   if (q.includes('trending') || q.includes('trend')) {
+    const top3 = sorted.slice(0, 3);
     const chart: AIChartData = {
       type: 'comparison',
-      labels: ['Bravo', 'Diaz', 'Duncan'],
+      labels: [top3[0].lastName, top3[1].lastName, top3[2].lastName],
       series: [
-        { label: 'Last Month', values: [78, 90, 77], color: '#666' },
-        { label: 'Current', values: [82, 96, 80], color: 'var(--accent)' },
+        { label: 'Last Month', values: [top3[0].avgEV - 4, top3[1].avgEV - 3, top3[2].avgEV - 3], color: '#666' },
+        { label: 'Current', values: [top3[0].avgEV, top3[1].avgEV, top3[2].avgEV], color: 'var(--accent)' },
       ],
-      yMax: 110,
+      yMax: Math.max(...top3.map(p => p.avgEV)) + 15,
       unit: 'Avg EV (MPH)',
     };
     return {
-      text: `Players trending up this month:\n\n\u2022 Angel Bravo \u2014 Avg EV jumped from 78 to 82 MPH (+5.1%) over last 3 sessions.\n\u2022 Lucas Diaz \u2014 Max EV hit 96 MPH, a new personal best.\n\u2022 Wyatt Duncan \u2014 Swing count up 20% and maintaining quality.`,
+      text: `Players trending up this month:\n\n\u2022 ${top3[0].firstName} ${top3[0].lastName} \u2014 Avg EV jumped from ${top3[0].avgEV - 4} to ${top3[0].avgEV} MPH over last 3 sessions.\n\u2022 ${top3[1].firstName} ${top3[1].lastName} \u2014 Max EV hit ${top3[1].maxEV} MPH, a new personal best.\n\u2022 ${top3[2].firstName} ${top3[2].lastName} \u2014 Swing count up 20% and maintaining quality.`,
       chart,
     };
   }
@@ -180,10 +189,10 @@ export function getFacilityAIResponse(query: string): AIResponse {
         { label: '10/25', value: 73 },
         { label: '11/1', value: 71 },
       ],
-      unit: 'Stump Avg EV',
+      unit: 'Hollins Avg EV',
     };
     return {
-      text: `Potential red flags:\n\n\u26a0\ufe0f Landon Stump \u2014 Avg EV dropped 4 MPH over last 2 sessions while swing count stayed the same. Could indicate fatigue or mechanical regression. Recommend a video review.\n\n\u26a0\ufe0f Jayden Portes \u2014 Launch angle trending heavily toward groundballs (62% last session). Check if he\u2019s dropping his hands.`,
+      text: `Potential red flags:\n\n\u26a0\ufe0f Cade Hollins \u2014 Avg EV dropped 4 MPH over last 2 sessions while swing count stayed the same. Could indicate fatigue or mechanical regression. Recommend a video review.\n\n\u26a0\ufe0f Malik Sutton \u2014 Launch angle trending heavily toward groundballs (62% last session). Check if he\u2019s dropping his hands.`,
       chart,
     };
   }

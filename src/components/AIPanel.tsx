@@ -26,13 +26,13 @@ interface Message {
   chart?: AIChartData
 }
 
-/** Mini inline line chart for AI responses */
+/** Line chart for AI responses */
 function MiniLineChart({ data }: { data: AIChartData }) {
   const pts = data.points || []
   if (pts.length < 2) return null
   const yMax = data.yMax || Math.max(...pts.map(p => p.value)) * 1.15
   const yMin = Math.min(...pts.map(p => p.value)) * 0.85
-  const w = 320, h = 110, pad = 24
+  const w = 460, h = 200, pad = 32
   const scaleX = (i: number) => pad + (i / (pts.length - 1)) * (w - pad * 2)
   const scaleY = (v: number) => h - pad - ((v - yMin) / (yMax - yMin)) * (h - pad * 2)
 
@@ -49,8 +49,8 @@ function MiniLineChart({ data }: { data: AIChartData }) {
   }
 
   return (
-    <div style={{ marginTop: 8, background: 'rgba(20,20,20,0.6)', borderRadius: 6, padding: '8px 6px 4px', border: '1px solid rgba(255,255,255,0.05)' }}>
-      <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', height: 95 }}>
+    <div style={{ background: 'rgba(20,20,20,0.6)', borderRadius: 8, padding: '12px 10px 8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+      <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', height: 180 }}>
         <defs>
           <linearGradient id="ai-fill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="rgba(224,172,68,0.3)" />
@@ -58,84 +58,84 @@ function MiniLineChart({ data }: { data: AIChartData }) {
           </linearGradient>
         </defs>
         <path d={d + ` L ${svgPts[svgPts.length - 1][0]},${h - pad} L ${svgPts[0][0]},${h - pad} Z`} fill="url(#ai-fill)" />
-        <path d={d} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" />
+        <path d={d} fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" />
         {svgPts.map(([x, y], i) => (
           <g key={i}>
-            <circle cx={x} cy={y} r="3" fill="var(--accent)" />
-            <text x={x} y={y - 8} fill="var(--text)" fontSize="8" textAnchor="middle" fontWeight="700">{pts[i].value}</text>
-            <text x={x} y={h - 6} fill="var(--muted)" fontSize="7.5" textAnchor="middle">{pts[i].label}</text>
+            <circle cx={x} cy={y} r="4" fill="var(--accent)" />
+            <text x={x} y={y - 10} fill="var(--text)" fontSize="13" textAnchor="middle" fontWeight="700">{pts[i].value}</text>
+            <text x={x} y={h - 8} fill="var(--muted)" fontSize="12" textAnchor="middle">{pts[i].label}</text>
           </g>
         ))}
       </svg>
-      {data.unit && <div style={{ fontSize: 9, color: 'var(--muted)', textAlign: 'right', paddingRight: 6, marginTop: 2 }}>{data.unit}</div>}
+      {data.unit && <div style={{ fontSize: 13, color: 'var(--muted)', textAlign: 'right', paddingRight: 10, marginTop: 4 }}>{data.unit}</div>}
     </div>
   )
 }
 
-/** Mini bar chart for comparison data */
+/** Bar chart for comparison data */
 function MiniBarChart({ data }: { data: AIChartData }) {
   const pts = data.points || []
   if (pts.length === 0) return null
   const maxVal = data.yMax || Math.max(...pts.map(p => p.value)) * 1.1
 
   return (
-    <div style={{ marginTop: 8, background: 'rgba(20,20,20,0.6)', borderRadius: 6, padding: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+    <div style={{ background: 'rgba(20,20,20,0.6)', borderRadius: 8, padding: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
       {pts.map((p, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-          <span style={{ width: 55, fontSize: 9, fontWeight: 700, color: 'var(--muted)', textAlign: 'right', flexShrink: 0 }}>{p.label}</span>
-          <div style={{ flex: 1, height: 14, background: '#1a1a1a', borderRadius: 3, overflow: 'hidden' }}>
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+          <span style={{ width: 70, fontSize: 14, fontWeight: 700, color: 'var(--muted)', textAlign: 'right', flexShrink: 0 }}>{p.label}</span>
+          <div style={{ flex: 1, height: 26, background: '#1a1a1a', borderRadius: 5, overflow: 'hidden' }}>
             <div style={{
               height: '100%',
               width: `${(p.value / maxVal) * 100}%`,
               background: i === 0 ? 'var(--accent)' : i === 1 ? 'var(--accent2)' : 'var(--accent3)',
-              borderRadius: 3,
+              borderRadius: 5,
               animation: 'growWidth 0.6s ease-out both',
               animationDelay: `${i * 0.1}s`,
             }} />
           </div>
-          <span style={{ width: 42, fontSize: 9, color: 'var(--text)', textAlign: 'right', flexShrink: 0, fontWeight: 700 }}>{p.value}{data.unit || ''}</span>
+          <span style={{ width: 55, fontSize: 14, color: 'var(--text)', textAlign: 'right', flexShrink: 0, fontWeight: 700 }}>{p.value}{data.unit || ''}</span>
         </div>
       ))}
     </div>
   )
 }
 
-/** Mini grouped comparison chart */
+/** Grouped comparison chart */
 function MiniComparisonChart({ data }: { data: AIChartData }) {
   const series = data.series || []
   const labels = data.labels || []
   if (series.length === 0) return null
   const allValues = series.flatMap(s => s.values)
   const maxVal = data.yMax || Math.max(...allValues) * 1.1
-  const w = 320, h = 110, pad = 32, barW = 16
-  const groupW = series.length * (barW + 3) + 10
+  const w = 460, h = 200, pad = 40, barW = 22
+  const groupW = series.length * (barW + 4) + 12
   const scaleX = (gi: number) => pad + (gi / Math.max(1, labels.length - 1)) * (w - pad * 2) - groupW / 2
-  const scaleY = (v: number) => h - 24 - (v / maxVal) * (h - 36)
+  const scaleY = (v: number) => h - 30 - (v / maxVal) * (h - 44)
 
   return (
-    <div style={{ marginTop: 8, background: 'rgba(20,20,20,0.6)', borderRadius: 6, padding: '8px 6px 4px', border: '1px solid rgba(255,255,255,0.05)' }}>
-      <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', height: 100 }}>
+    <div style={{ background: 'rgba(20,20,20,0.6)', borderRadius: 8, padding: '12px 10px 8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+      <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', height: 180 }}>
         {labels.map((label, gi) => (
           <g key={gi}>
             {series.map((s, si) => {
-              const x = scaleX(gi) + si * (barW + 3) + 5
+              const x = scaleX(gi) + si * (barW + 4) + 6
               const y = scaleY(s.values[gi] || 0)
-              const barH = h - 24 - y
+              const barH = h - 30 - y
               return (
                 <g key={si}>
-                  <rect x={x} y={y} width={barW} height={barH} fill={s.color} rx="2" opacity="0.85" />
-                  <text x={x + barW / 2} y={y - 4} fill="var(--text)" fontSize="7" textAnchor="middle" fontWeight="700">{s.values[gi]}</text>
+                  <rect x={x} y={y} width={barW} height={barH} fill={s.color} rx="3" opacity="0.85" />
+                  <text x={x + barW / 2} y={y - 5} fill="var(--text)" fontSize="12" textAnchor="middle" fontWeight="700">{s.values[gi]}</text>
                 </g>
               )
             })}
-            <text x={scaleX(gi) + groupW / 2} y={h - 6} fill="var(--muted)" fontSize="7.5" textAnchor="middle">{label}</text>
+            <text x={scaleX(gi) + groupW / 2} y={h - 8} fill="var(--muted)" fontSize="12" textAnchor="middle">{label}</text>
           </g>
         ))}
       </svg>
-      <div style={{ display: 'flex', gap: 10, justifyContent: 'center', paddingBottom: 4 }}>
+      <div style={{ display: 'flex', gap: 16, justifyContent: 'center', paddingBottom: 8, paddingTop: 4 }}>
         {series.map((s, i) => (
-          <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 8, color: 'var(--muted)' }}>
-            <span style={{ width: 8, height: 8, borderRadius: 2, background: s.color, display: 'inline-block' }} />
+          <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--muted)' }}>
+            <span style={{ width: 10, height: 10, borderRadius: 3, background: s.color, display: 'inline-block' }} />
             {s.label}
           </span>
         ))}
@@ -175,8 +175,8 @@ function AILoadingBubble() {
         {/* Pulsing logo */}
         <img src="/branding/icon.png" alt="" className="ai-loading-logo" style={{ width: 36, height: 36, objectFit: 'contain' }} />
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        <span style={{ fontSize: 9, color: 'var(--accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', marginRight: 4 }}>Analyzing</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+        <span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.2px', marginRight: 5 }}>Analyzing</span>
         <span className="ai-loading-dot" style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
         <span className="ai-loading-dot" style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
         <span className="ai-loading-dot" style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
@@ -189,6 +189,7 @@ export default function AIPanel({ suggestions, onQuery, inline = true }: AIPanel
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const pendingRef = useRef<{ text: string; chart?: AIChartData } | null>(null)
 
@@ -201,13 +202,12 @@ export default function AIPanel({ suggestions, onQuery, inline = true }: AIPanel
   const send = (text: string) => {
     if (!text.trim() || loading) return
     const response = onQuery(text)
-    // Add user message immediately, then show loading
     setMessages(prev => [...prev, { role: 'user', text }])
     setInput('')
     setLoading(true)
     pendingRef.current = { text: response.text, chart: response.chart }
 
-    // Simulate AI thinking for 3 seconds
+    // Loading at current size, then expand when answer arrives
     setTimeout(() => {
       const pending = pendingRef.current
       if (pending) {
@@ -215,6 +215,7 @@ export default function AIPanel({ suggestions, onQuery, inline = true }: AIPanel
         pendingRef.current = null
       }
       setLoading(false)
+      setExpanded(true)
     }, 3000)
   }
 
@@ -222,9 +223,10 @@ export default function AIPanel({ suggestions, onQuery, inline = true }: AIPanel
 
   return (
     <div style={{
-      width: 400, minWidth: 400, background: 'var(--bg)',
+      width: expanded ? 700 : 400, minWidth: 400, background: 'var(--bg)',
       borderLeft: '2px solid var(--accent)',
       display: 'flex', flexDirection: 'column', height: '100%',
+      transition: 'width 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
     }}>
       <div style={{
         fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 14,
@@ -233,37 +235,56 @@ export default function AIPanel({ suggestions, onQuery, inline = true }: AIPanel
         display: 'flex', alignItems: 'center', gap: 10,
       }}>
         <img src="/branding/icon.png" alt="" style={{ width: 24, opacity: 0.8 }} />
-        BASELINE AI
+        <span style={{ flex: 1 }}>BASELINE AI</span>
+        <button
+          onClick={() => setExpanded(e => !e)}
+          title={expanded ? 'Collapse panel' : 'Expand panel'}
+          style={{
+            background: 'none', border: '1px solid var(--card-border)', borderRadius: 4,
+            color: 'var(--muted)', cursor: 'pointer', padding: '2px 6px', fontSize: 14,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'color 0.15s, border-color 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = 'var(--accent)'; e.currentTarget.style.borderColor = 'var(--accent)' }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'var(--muted)'; e.currentTarget.style.borderColor = 'var(--card-border)' }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            {expanded
+              ? <><polyline points="13 17 18 12 13 7" /><polyline points="6 17 11 12 6 7" /></>
+              : <><polyline points="11 17 6 12 11 7" /><polyline points="18 17 13 12 18 7" /></>
+            }
+          </svg>
+        </button>
       </div>
 
-      <div ref={scrollRef} style={{ flex: 1, overflow: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div ref={scrollRef} style={{ flex: 1, overflow: 'auto', padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {messages.length === 0 && !loading && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, opacity: 0.5 }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, opacity: 0.5 }}>
             <img src="/branding/icon.png" alt="" style={{ width: 44, opacity: 0.4 }} />
-            <div style={{ fontSize: 12, color: 'var(--muted)', textAlign: 'center', lineHeight: 1.5 }}>Ask me anything about<br />your data</div>
+            <div style={{ fontSize: 14, color: 'var(--muted)', textAlign: 'center', lineHeight: 1.5 }}>Ask me anything about<br />your data</div>
           </div>
         )}
         {messages.map((m, i) => (
           <div key={i} className="anim-fade-in" style={m.role === 'user' ? {
             alignSelf: 'flex-end', background: 'var(--accent)', color: '#000',
-            padding: '10px 14px', borderRadius: '14px 14px 2px 14px', maxWidth: '85%', fontSize: 12,
+            padding: '12px 18px', borderRadius: '14px 14px 2px 14px', maxWidth: '85%', fontSize: 14,
             fontWeight: 500,
           } : {
             alignSelf: 'flex-start', background: 'var(--panel2)', border: '1px solid var(--panel-border)',
-            padding: '12px 14px', borderRadius: '14px 14px 14px 2px', maxWidth: '95%', fontSize: 11.5, lineHeight: 1.65,
+            padding: '16px 18px', borderRadius: '14px 14px 14px 2px', maxWidth: '100%', width: '100%', fontSize: 14, lineHeight: 1.7,
           }}>
-            {m.role === 'ai' && <div style={{ fontSize: 9, color: 'var(--accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 6 }}>Baseline AI</div>}
-            <div style={{ whiteSpace: 'pre-wrap' }}>{m.text}</div>
+            {m.role === 'ai' && <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 10 }}>Baseline AI</div>}
             {m.chart && <AIChart data={m.chart} />}
+            <div style={{ whiteSpace: 'pre-wrap', marginTop: m.chart ? 12 : 0 }}>{m.text}</div>
           </div>
         ))}
         {loading && <AILoadingBubble />}
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, padding: '6px 14px 8px' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '8px 18px 10px' }}>
         {messages.length === 0 && !loading && suggestions.map((s, i) => (
           <button key={i} style={{
-            fontSize: 10, padding: '6px 12px', borderRadius: 14,
+            fontSize: 13, padding: '9px 16px', borderRadius: 14,
             border: '1px solid var(--card-border)', background: 'var(--panel)',
             color: 'var(--text)', cursor: 'pointer', whiteSpace: 'nowrap',
             transition: 'border-color 0.15s',
@@ -271,15 +292,15 @@ export default function AIPanel({ suggestions, onQuery, inline = true }: AIPanel
         ))}
       </div>
 
-      <div style={{ display: 'flex', borderTop: '1px solid var(--panel-border)', padding: '10px 12px', gap: 8 }}>
+      <div style={{ display: 'flex', borderTop: '1px solid var(--panel-border)', padding: '12px 14px', gap: 10 }}>
         <input style={{
-          flex: 1, padding: '10px 14px', background: 'var(--panel)',
-          border: '1px solid var(--card-border)', borderRadius: 6,
-          color: 'var(--text)', fontSize: 12,
+          flex: 1, padding: '12px 16px', background: 'var(--panel)',
+          border: '1px solid var(--card-border)', borderRadius: 8,
+          color: 'var(--text)', fontSize: 14,
         }} placeholder="Ask away..." value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && send(input)} />
         <button style={{
-          width: 38, height: 38, borderRadius: 6, background: loading ? 'var(--accent-dark)' : 'var(--accent)',
-          color: '#000', fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: 42, height: 42, borderRadius: 8, background: loading ? 'var(--accent-dark)' : 'var(--accent)',
+          color: '#000', fontWeight: 700, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
           border: 'none', cursor: loading ? 'not-allowed' : 'pointer', transition: 'background 0.2s',
         }} onClick={() => send(input)}>&#10148;</button>
       </div>

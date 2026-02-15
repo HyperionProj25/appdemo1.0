@@ -47,8 +47,8 @@ export const locations: EcoLocation[] = [
 ];
 
 export const coaches: EcoCoach[] = [
-  { name: 'DJ SNELTEN', city: 'Lake Zurich, IL', description: 'Former MLB LHP\nDirector of Pitching at GUD Baseball', technologies: ['Trackman', 'Hawkins'] },
-  { name: 'BOBBY HILL', city: 'Saratoga, CA', description: '9 Year former MLB Veteran\nHead Coach At West Valley College\nHead Coach at USA Baseball', technologies: ['Blast Motion', 'HitTrax'] },
-  { name: 'Nick Sanzeri', city: 'Campbell, CA', description: 'Director of Pitching at the Yard\nPitching Coach at Ohlone College', technologies: ['Trackman'] },
-  { name: 'CAMERON CRONE', city: 'Morgan Hill, CA', description: 'Director of Pitching at the\nKinetic Performance Institute', technologies: ['Trackman', 'Hawkins'] },
+  { name: 'MATT HARGROVE', city: 'Lake Zurich, IL', description: 'Former Professional LHP\nDirector of Pitching Development', technologies: ['Trackman', 'Hawkins'] },
+  { name: 'STEVE CALDWELL', city: 'Saratoga, CA', description: 'Former Professional Veteran\nHead Coach\nDirector of Hitting Development', technologies: ['Blast Motion', 'HitTrax'] },
+  { name: 'CHRIS WELDON', city: 'Campbell, CA', description: 'Director of Pitching Development\nPitching Coach', technologies: ['Trackman'] },
+  { name: 'ALEX RAMSTEAD', city: 'Morgan Hill, CA', description: 'Director of Pitching at\nKinetic Performance Institute', technologies: ['Trackman', 'Hawkins'] },
 ];

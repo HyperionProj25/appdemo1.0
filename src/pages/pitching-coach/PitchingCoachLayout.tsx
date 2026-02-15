@@ -3,9 +3,9 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { usePersona } from '../../context/PersonaContext'
 import Logo from '../../components/Logo'
 import AIPanel from '../../components/AIPanel'
-import { scoutSuggestions, getScoutAIResponse } from '../../data/personaAI'
+import { pitchingCoachSuggestions, getPitchingCoachAIResponse } from '../../data/personaAI'
 
-export default function ScoutLayout() {
+export default function PitchingCoachLayout() {
   const { personaLabel, setPersona } = usePersona()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -53,53 +53,49 @@ export default function ScoutLayout() {
 
         {/* Navigation */}
         <nav style={{ flex: 1, padding: '12px 0' }}>
-          <NavLink to="/scout/dashboard" style={({ isActive }) => linkStyle(isActive)}>
+          <NavLink to="/pitching-coach/dashboard" style={({ isActive }) => linkStyle(isActive)}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0 }}>
               <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
               <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
             </svg>
             <span style={labelStyle}>Dashboard</span>
           </NavLink>
-          <NavLink to="/scout/watchlist" style={({ isActive }) => linkStyle(isActive)}>
+          <NavLink to="/pitching-coach/staff" style={({ isActive }) => linkStyle(isActive)}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0 }}>
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-              <circle cx="12" cy="12" r="3" />
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
-            <span style={labelStyle}>Watchlist</span>
+            <span style={labelStyle}>Staff</span>
           </NavLink>
-          <NavLink to="/scout/territory" style={({ isActive }) => linkStyle(isActive)}>
+          <NavLink to="/pitching-coach/arsenal" style={({ isActive }) => linkStyle(isActive)}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0 }}>
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-              <circle cx="12" cy="10" r="3" />
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 6v6l4 2" />
             </svg>
-            <span style={labelStyle}>Territory</span>
+            <span style={labelStyle}>Arsenal</span>
           </NavLink>
-          <NavLink to="/scout/compare" style={({ isActive }) => linkStyle(isActive)}>
+          <NavLink to="/pitching-coach/bullpen" style={({ isActive }) => linkStyle(isActive)}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0 }}>
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <line x1="12" y1="3" x2="12" y2="21" />
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
             </svg>
-            <span style={labelStyle}>Compare</span>
+            <span style={labelStyle}>Bullpen</span>
           </NavLink>
-          <NavLink to="/scout/reports" style={({ isActive }) => linkStyle(isActive)}>
+          <NavLink to="/pitching-coach/gameplan" style={({ isActive }) => linkStyle(isActive)}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0 }}>
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
-            <span style={labelStyle}>Reports</span>
+            <span style={labelStyle}>Game Plan</span>
           </NavLink>
-          <NavLink to="/scout/pipeline" style={({ isActive }) => linkStyle(isActive)}>
+          <NavLink to="/pitching-coach/development" style={({ isActive }) => linkStyle(isActive)}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0 }}>
-              <line x1="8" y1="6" x2="21" y2="6" />
-              <line x1="8" y1="12" x2="21" y2="12" />
-              <line x1="8" y1="18" x2="21" y2="18" />
-              <line x1="3" y1="6" x2="3.01" y2="6" />
-              <line x1="3" y1="12" x2="3.01" y2="12" />
-              <line x1="3" y1="18" x2="3.01" y2="18" />
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+              <polyline points="17 6 23 6 23 12" />
             </svg>
-            <span style={labelStyle}>Pipeline</span>
+            <span style={labelStyle}>Development</span>
           </NavLink>
         </nav>
 
@@ -142,8 +138,8 @@ export default function ScoutLayout() {
 
       {/* AI Panel */}
       <AIPanel
-        suggestions={scoutSuggestions}
-        onQuery={getScoutAIResponse}
+        suggestions={pitchingCoachSuggestions}
+        onQuery={getPitchingCoachAIResponse}
         inline={true}
       />
     </div>

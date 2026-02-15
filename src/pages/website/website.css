@@ -434,6 +434,15 @@
   gap: 24px;
 }
 
+.ws-grid-5 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+}
+
+.ws-grid-5 > div { display: flex; }
+.ws-grid-5 > div > .ws-card { flex: 1; }
+
 .ws-grid-2 {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -950,6 +959,7 @@
   .ws-section-title { font-size: 32px; }
   .ws-feature-text h3 { font-size: 26px; }
   .ws-grid-3 { grid-template-columns: 1fr 1fr; }
+  .ws-grid-5 { grid-template-columns: repeat(3, 1fr); }
   .ws-feature-row { gap: 48px; }
   .ws-footer-links { gap: 48px; }
   .ws-contact-grid { grid-template-columns: 1fr; }
@@ -993,6 +1003,7 @@
   .ws-stat:nth-child(-n+2) { border-bottom: 1px solid rgba(224, 172, 68, 0.08); }
 
   .ws-grid-3 { grid-template-columns: 1fr; }
+  .ws-grid-5 { grid-template-columns: 1fr; }
   .ws-grid-2 { grid-template-columns: 1fr; }
   .ws-feature-row { grid-template-columns: 1fr; gap: 32px; padding: 48px 0; }
   .ws-feature-row.reverse { direction: ltr; }

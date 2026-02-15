@@ -21,8 +21,8 @@ export default function HomePage() {
           <h1>Where Performance<br />Becomes Direction</h1>
           <p className="ws-hero-sub">
             The professional-grade analytics platform turning raw player data
-            into actionable intelligence — for scouts, coaches, and agents
-            who demand more.
+            into actionable intelligence — for scouts, coaches, pitching coaches,
+            agents, and players who demand more.
           </p>
           <div className="ws-hero-actions">
             <Link to="/site/product" className="ws-btn-primary">Explore the Platform</Link>
@@ -57,7 +57,7 @@ export default function HomePage() {
               <div className="ws-stat-label">Trend Detection</div>
             </div>
             <div className="ws-stat">
-              <div className="ws-stat-value"><StatCounter end={3} /></div>
+              <div className="ws-stat-value"><StatCounter end={5} /></div>
               <div className="ws-stat-label">Professional Workflows</div>
             </div>
           </div>
@@ -69,13 +69,13 @@ export default function HomePage() {
         <div className="ws-container ws-text-center">
           <FadeSection>
             <div className="ws-section-label">Built For Professionals</div>
-            <h2 className="ws-section-title">Three Roles. One Platform.</h2>
+            <h2 className="ws-section-title">Five Workflows. One Platform.</h2>
             <p className="ws-section-subtitle centered" style={{ marginBottom: 64 }}>
-              Purpose-built workflows for every stakeholder in the player development pipeline.
+              Purpose-built workflows for every stakeholder in the player development pipeline — from scouts and coaches to pitching coaches, agents, and players.
             </p>
           </FadeSection>
 
-          <div className="ws-grid-3">
+          <div className="ws-grid-5">
             <FadeSection delay={0.1}>
               <div className="ws-card">
                 <div className="ws-card-icon">
@@ -91,7 +91,7 @@ export default function HomePage() {
               </div>
             </FadeSection>
 
-            <FadeSection delay={0.2}>
+            <FadeSection delay={0.15}>
               <div className="ws-card">
                 <div className="ws-card-icon">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -100,13 +100,29 @@ export default function HomePage() {
                     <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
                   </svg>
                 </div>
-                <h3>Coach</h3>
+                <h3>Hitting Coach</h3>
                 <div className="ws-card-sub">Team Management</div>
                 <p>Manage your roster, prep for matchups, and track trend data across your entire hitting group with data-driven confidence.</p>
               </div>
             </FadeSection>
 
-            <FadeSection delay={0.3}>
+            <FadeSection delay={0.2}>
+              <div className="ws-card">
+                <div className="ws-card-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M12 12c-4 0-6 2-6 5v2" />
+                    <circle cx="18" cy="16" r="3" />
+                    <path d="M18 13v6" /><path d="M15 16h6" />
+                  </svg>
+                </div>
+                <h3>Pitching Coach</h3>
+                <div className="ws-card-sub">Pitcher Development</div>
+                <p>Develop arms, manage bullpen workloads, and prepare game plans with data-driven pitching intelligence.</p>
+              </div>
+            </FadeSection>
+
+            <FadeSection delay={0.25}>
               <div className="ws-card">
                 <div className="ws-card-icon">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -118,6 +134,21 @@ export default function HomePage() {
                 <h3>Agent</h3>
                 <div className="ws-card-sub">Client Representation</div>
                 <p>Build verified development resumes with fact-supported evidence for arbitration and contract negotiations.</p>
+              </div>
+            </FadeSection>
+
+            <FadeSection delay={0.3}>
+              <div className="ws-card">
+                <div className="ws-card-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <circle cx="12" cy="7" r="4" />
+                    <path d="M5.5 21v-2a6.5 6.5 0 0 1 13 0v2" />
+                    <path d="M17 10l2 2 4-4" />
+                  </svg>
+                </div>
+                <h3>Player</h3>
+                <div className="ws-card-sub">Personal Analytics</div>
+                <p>Track your own development across every metric, every session, every season — your verified performance profile.</p>
               </div>
             </FadeSection>
           </div>

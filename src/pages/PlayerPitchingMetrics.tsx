@@ -84,26 +84,26 @@ export default function PlayerPitchingMetrics() {
     <div style={{ display: 'flex', height: '100%', width: '100%', overflow: 'hidden' }}>
       <Sidebar playerName={name} playerId={playerId} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '20px 28px 14px' }}>
-        <div className="anim-fade-in" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexShrink: 0 }}>
+        <div className="anim-fade-in" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexShrink: 0 }}>
           <div />
           <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 26, letterSpacing: '5px', textTransform: 'uppercase' }}>BASELINE PITCHING</h1>
           <button className="btn btn--accent" onClick={() => setShowAnnotate(true)}>ANNOTATE</button>
         </div>
-        <div className="anim-fade-in anim-delay-1" style={{ display: 'flex', gap: 8, marginBottom: 14, flexShrink: 0 }}>
+        <div className="anim-fade-in anim-delay-1" style={{ display: 'flex', gap: 10, marginBottom: 16, flexShrink: 0 }}>
           <button className="btn" disabled title="Coming soon">DATE</button>
           <button className="btn" onClick={() => navigate(`/player/${playerId}/pitching`)}>{'\u2190'} BACK TO DASHBOARD</button>
         </div>
 
         {/* Tab bar */}
-        <div className="anim-fade-in anim-delay-2" style={{ display: 'flex', border: '1px solid var(--orange-border)', borderRadius: 6, overflow: 'hidden', marginBottom: 14, flexShrink: 0 }}>
+        <div className="anim-fade-in anim-delay-2" style={{ display: 'flex', border: '1px solid var(--orange-border)', borderRadius: 8, overflow: 'hidden', marginBottom: 16, flexShrink: 0 }}>
           {[
             { key: 'fb-velocity', label: 'FB VELOCITY' },
             { key: 'usage', label: 'USAGE' },
             { key: 'weak-contact', label: 'WEAK CONTACT RATE' },
           ].map(t => (
             <button key={t.key} style={{
-              flex: 1, padding: '10px 0', fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 11,
-              textTransform: 'uppercase', letterSpacing: '1.5px', border: 'none',
+              flex: 1, padding: '12px 0', fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 12,
+              textTransform: 'uppercase', letterSpacing: '1.2px', border: 'none',
               borderRight: '1px solid var(--orange-border)', cursor: 'pointer',
               background: activeTab === t.key ? 'var(--accent)' : 'transparent',
               color: activeTab === t.key ? '#000' : 'var(--muted)',
@@ -113,7 +113,7 @@ export default function PlayerPitchingMetrics() {
         </div>
 
         {/* Chart */}
-        <div key={fadeKey} className="anim-slide-up anim-delay-3" style={{ flex: 1, minHeight: 0, background: 'var(--card-bg)', border: '1px solid var(--orange-border)', borderRadius: 6, padding: '16px', marginBottom: 14, boxShadow: 'inset 0 0 20px rgba(224,172,68,0.04)', display: 'flex' }}>
+        <div key={fadeKey} className="anim-slide-up anim-delay-3" style={{ flex: 1, minHeight: 0, background: 'var(--card-bg)', border: '1px solid var(--orange-border)', borderRadius: 8, padding: '18px', marginBottom: 16, boxShadow: 'inset 0 0 20px rgba(224,172,68,0.04)', display: 'flex' }}>
           <AnimatedChart
             points={cfg.points}
             yMin={cfg.yMin}
@@ -127,32 +127,32 @@ export default function PlayerPitchingMetrics() {
         </div>
 
         {/* Bottom sections */}
-        <div style={{ display: 'flex', gap: 14, flexShrink: 0 }}>
-          <div className="anim-slide-up anim-delay-5" style={{ flex: 1, background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 6, padding: '16px' }}>
+        <div style={{ display: 'flex', gap: 16, flexShrink: 0 }}>
+          <div className="anim-slide-up anim-delay-5" style={{ flex: 1, background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 8, padding: '18px' }}>
             <div style={secTitle}>RECENT EVENT NOTES</div>
             {notes.map((n, i) => (
-              <div key={i} style={{ marginBottom: 12 }}>
-                <div style={{ color: 'var(--accent)', fontSize: 12, fontWeight: 700, fontStyle: 'italic', marginBottom: 3 }}>{n.date}</div>
-                <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', lineHeight: 1.4 }}>{n.text}</div>
+              <div key={i} style={{ marginBottom: 14 }}>
+                <div style={{ color: 'var(--accent)', fontSize: 13, fontWeight: 700, fontStyle: 'italic', marginBottom: 4 }}>{n.date}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', lineHeight: 1.4 }}>{n.text}</div>
               </div>
             ))}
           </div>
-          <div className="anim-slide-up anim-delay-6" style={{ flex: 1, background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 6, padding: '16px' }}>
+          <div className="anim-slide-up anim-delay-6" style={{ flex: 1, background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 8, padding: '18px' }}>
             <div style={secTitle}>EVENTS ATTENDED</div>
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ color: 'var(--accent)', fontSize: 12, fontWeight: 700, fontStyle: 'italic', marginBottom: 3 }}>9/25/25</div>
-              <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', lineHeight: 1.4 }}>NORCAL WORLD SERIES</div>
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ color: 'var(--accent)', fontSize: 13, fontWeight: 700, fontStyle: 'italic', marginBottom: 4 }}>9/25/25</div>
+              <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', lineHeight: 1.4 }}>NORCAL WORLD SERIES</div>
             </div>
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ color: 'var(--accent)', fontSize: 12, fontWeight: 700, fontStyle: 'italic', marginBottom: 3 }}>8/20/25</div>
-              <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', lineHeight: 1.4 }}>CCB CLASSIC</div>
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ color: 'var(--accent)', fontSize: 13, fontWeight: 700, fontStyle: 'italic', marginBottom: 4 }}>8/20/25</div>
+              <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', lineHeight: 1.4 }}>CCB CLASSIC</div>
             </div>
           </div>
         </div>
       </div>
 
       {savedFlash && (
-        <div className="anim-fade-in" style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--accent)', color: '#000', padding: '10px 24px', borderRadius: 6, fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 12, letterSpacing: '1px', zIndex: 2000, boxShadow: '0 4px 20px rgba(224,172,68,0.4)' }}>
+        <div className="anim-fade-in" style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--accent)', color: '#000', padding: '12px 26px', borderRadius: 8, fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 13, letterSpacing: '1px', zIndex: 2000, boxShadow: '0 4px 20px rgba(224,172,68,0.4)' }}>
           ANNOTATION SAVED
         </div>
       )}
@@ -169,8 +169,8 @@ export default function PlayerPitchingMetrics() {
               onChange={e => { setNewDate(e.target.value); setDateError(false) }}
               style={{ ...fieldInput, borderColor: dateError ? '#e53935' : 'var(--card-border)' }}
             />
-            {dateError && <div style={{ fontSize: 10, color: '#e53935', marginTop: 4 }}>Enter a valid date (M/D or M/D/YY)</div>}
-            <label style={{ ...fieldLabel, marginTop: 12 }}>NOTE</label>
+            {dateError && <div style={{ fontSize: 11, color: '#e53935', marginTop: 4 }}>Enter a valid date (M/D or M/D/YY)</div>}
+            <label style={{ ...fieldLabel, marginTop: 14 }}>NOTE</label>
             <textarea
               style={{ ...fieldInput, resize: 'vertical' }}
               placeholder="What happened on this date?"
@@ -178,7 +178,7 @@ export default function PlayerPitchingMetrics() {
               onChange={e => setNewNote(e.target.value)}
               rows={3}
             />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
               <button className="btn" onClick={() => { setShowAnnotate(false); setNewDate(''); setNewNote(''); }}>Cancel</button>
               <button className="btn btn--accent" onClick={handleSaveAnnotation}>Save</button>
             </div>
@@ -189,6 +189,6 @@ export default function PlayerPitchingMetrics() {
   )
 }
 
-const secTitle: React.CSSProperties = { fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 12, paddingBottom: 7, borderBottom: '1px solid var(--orange-border)' }
-const fieldLabel: React.CSSProperties = { display: 'block', fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--muted)', marginBottom: 6 }
-const fieldInput: React.CSSProperties = { display: 'block', width: '100%', padding: 14, background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 6, color: 'var(--text)', fontSize: 13, fontFamily: 'var(--font-body)' }
+const secTitle: React.CSSProperties = { fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 14, paddingBottom: 8, borderBottom: '1px solid var(--orange-border)' }
+const fieldLabel: React.CSSProperties = { display: 'block', fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '1.2px', color: 'var(--muted)', marginBottom: 8 }
+const fieldInput: React.CSSProperties = { display: 'block', width: '100%', padding: 14, background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 8, color: 'var(--text)', fontSize: 14, fontFamily: 'var(--font-body)' }

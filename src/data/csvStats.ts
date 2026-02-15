@@ -188,19 +188,19 @@ function makeBatter(
 // Based on mock_bp_data.csv BatterIds (3000001-3000013) with realistic stats
 
 export const batterStats: Record<string, BatterStats> = {
-  '3000001': makeBatter('3000001', 'Garcia, Marco', 89.4, 104.2, 14.3, 56, 48, 38.2, 1001),
-  '3000002': makeBatter('3000002', 'Bravo, Angel', 82.1, 97.3, 12.8, 54, 48, 28.5, 1002),
-  '3000003': makeBatter('3000003', 'Lucq, Mason', 78.4, 93.1, 11.2, 51, 42, 22.1, 1003),
-  '3000004': makeBatter('3000004', 'Duncan, Wyatt', 80.7, 95.6, 13.5, 53, 45, 25.8, 1004),
-  '3000005': makeBatter('3000005', 'Patrick, Liam', 76.2, 91.4, 10.8, 49, 39, 18.4, 1005),
-  '3000006': makeBatter('3000006', 'Griswold, Abby', 65.3, 78.2, 9.4, 46, 44, 8.2, 1006),
-  '3000007': makeBatter('3000007', 'Mundz, Grayson', 79.5, 94.3, 12.1, 52, 41, 24.3, 1007),
-  '3000008': makeBatter('3000008', 'Portes, Jayden', 77.8, 92.5, 11.6, 50, 43, 20.7, 1008),
-  '3000009': makeBatter('3000009', 'Baker, Sarah', 63.1, 76.4, 8.7, 44, 40, 6.5, 1009),
-  '3000010': makeBatter('3000010', 'Smith, Kaden', 64.5, 77.8, 9.1, 45, 38, 7.3, 1010),
-  '3000011': makeBatter('3000011', 'Daniels, Brea', 62.4, 75.1, 8.2, 43, 36, 5.8, 1011),
-  '3000012': makeBatter('3000012', 'Stump, Landon', 75.9, 90.2, 10.5, 48, 37, 17.6, 1012),
-  '3000013': makeBatter('3000013', 'Diaz, Lucas', 81.4, 96.8, 13.9, 55, 46, 30.1, 1013),
+  '3000001': makeBatter('3000001', 'Castillo, Reno', 89.4, 104.2, 14.3, 56, 48, 38.2, 1001),
+  '3000002': makeBatter('3000002', 'Vega, Darius', 82.1, 97.3, 12.8, 54, 48, 28.5, 1002),
+  '3000003': makeBatter('3000003', 'Briggs, Colton', 78.4, 93.1, 11.2, 51, 42, 22.1, 1003),
+  '3000004': makeBatter('3000004', 'Thornton, Jace', 80.7, 95.6, 13.5, 53, 45, 25.8, 1004),
+  '3000005': makeBatter('3000005', 'Calloway, Finn', 76.2, 91.4, 10.8, 49, 39, 18.4, 1005),
+  '3000006': makeBatter('3000006', 'Ridley, Tessa', 65.3, 78.2, 9.4, 46, 44, 8.2, 1006),
+  '3000007': makeBatter('3000007', 'Voss, Keaton', 79.5, 94.3, 12.1, 52, 41, 24.3, 1007),
+  '3000008': makeBatter('3000008', 'Sutton, Malik', 77.8, 92.5, 11.6, 50, 43, 20.7, 1008),
+  '3000009': makeBatter('3000009', 'Hewitt, Nora', 63.1, 76.4, 8.7, 44, 40, 6.5, 1009),
+  '3000010': makeBatter('3000010', 'Trask, Quinn', 64.5, 77.8, 9.1, 45, 38, 7.3, 1010),
+  '3000011': makeBatter('3000011', 'Laine, Piper', 62.4, 75.1, 8.2, 43, 36, 5.8, 1011),
+  '3000012': makeBatter('3000012', 'Hollins, Cade', 75.9, 90.2, 10.5, 48, 37, 17.6, 1012),
+  '3000013': makeBatter('3000013', 'Rivas, Nico', 81.4, 96.8, 13.9, 55, 46, 30.1, 1013),
 }
 
 // ── Pitcher database ────────────────────────────────────────────────────────
@@ -299,9 +299,9 @@ function makePitcher(
 }
 
 export const pitcherStats: Record<string, PitcherStats> = {
-  '2000001': makePitcher('2000001', 'Martinez, Diego', 91.2, 96.8, 54, 38, 2001),
-  '2000002': makePitcher('2000002', 'Thompson, Jake', 88.5, 93.4, 52, 42, 2002),
-  '2000003': makePitcher('2000003', 'Chen, Ryan', 89.8, 95.1, 53, 35, 2003),
+  '2000001': makePitcher('2000001', 'Santiago, Felix', 91.2, 96.8, 54, 38, 2001),
+  '2000002': makePitcher('2000002', 'Harmon, Cody', 88.5, 93.4, 52, 42, 2002),
+  '2000003': makePitcher('2000003', 'Tran, Jay', 89.8, 95.1, 53, 35, 2003),
 }
 
 // Map player IDs to pitcher IDs for pitching pages

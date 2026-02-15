@@ -44,51 +44,51 @@ export default function ScoutWatchlist() {
   const cardStyle: React.CSSProperties = {
     background: 'var(--panel)',
     border: '1px solid var(--orange-border)',
-    borderRadius: 8,
-    boxShadow: 'inset 0 1px 0 rgba(224,172,68,0.1)',
+    borderRadius: 10,
+    boxShadow: 'inset 0 1px 0 var(--accent-bg-medium)',
   }
 
   const secTitle: React.CSSProperties = {
     fontFamily: 'var(--font-heading)',
     fontWeight: 700,
-    fontSize: 11,
+    fontSize: 12,
     textTransform: 'uppercase',
-    letterSpacing: '2px',
+    letterSpacing: '1.5px',
     color: 'var(--accent)',
-    marginBottom: 16,
+    marginBottom: 18,
   }
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+    <div style={{ maxWidth: 1400, margin: '0 auto' }}>
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
+      <div className="anim-fade-in" style={{ marginBottom: 24 }}>
         <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 24, color: 'var(--text-bright)', marginBottom: 4 }}>
           Watchlist
         </h1>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--muted)' }}>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--muted)' }}>
           {watchlistPlayers.length} players in your territory
         </p>
       </div>
 
       {/* Filters */}
-      <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
+      <div className="anim-slide-up anim-delay-1" style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
         <div>
-          <label style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>
+          <label style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '1.2px', color: 'var(--muted)', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>
             Priority
           </label>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 10 }}>
             {['all', 'high', 'medium', 'low'].map(p => (
               <button
                 key={p}
                 onClick={() => setFilterPriority(p)}
                 style={{
-                  padding: '6px 14px',
+                  padding: '8px 14px',
                   background: filterPriority === p ? 'var(--accent)' : 'transparent',
                   border: `1px solid ${filterPriority === p ? 'var(--accent)' : 'var(--muted)'}`,
-                  borderRadius: 4,
+                  borderRadius: 6,
                   color: filterPriority === p ? '#000' : 'var(--text)',
                   fontFamily: 'var(--font-body)',
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: 600,
                   textTransform: 'uppercase',
                   cursor: 'pointer',
@@ -100,22 +100,22 @@ export default function ScoutWatchlist() {
           </div>
         </div>
         <div>
-          <label style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>
+          <label style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '1.2px', color: 'var(--muted)', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>
             Level
           </label>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 10 }}>
             {['all', 'AAA', 'AA', 'A+', 'A'].map(l => (
               <button
                 key={l}
                 onClick={() => setFilterLevel(l)}
                 style={{
-                  padding: '6px 14px',
+                  padding: '8px 14px',
                   background: filterLevel === l ? 'var(--accent)' : 'transparent',
                   border: `1px solid ${filterLevel === l ? 'var(--accent)' : 'var(--muted)'}`,
-                  borderRadius: 4,
+                  borderRadius: 6,
                   color: filterLevel === l ? '#000' : 'var(--text)',
                   fontFamily: 'var(--font-body)',
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: 600,
                   textTransform: 'uppercase',
                   cursor: 'pointer',
@@ -129,17 +129,17 @@ export default function ScoutWatchlist() {
       </div>
 
       {/* Watchlist Table */}
-      <div style={{ ...cardStyle, padding: 0 }}>
+      <div className="anim-slide-up anim-delay-2" style={{ ...cardStyle, padding: 0 }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--orange-border)' }}>
               {['Priority', 'Player', 'Team', 'Level', 'Pos', 'Avg EV', 'Max EV', 'Trend', 'Last Visit', 'Notes'].map(h => (
                 <th key={h} style={{
-                  padding: '12px 14px',
+                  padding: '12px 16px',
                   fontFamily: 'var(--font-body)',
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: 600,
-                  letterSpacing: '1.5px',
+                  letterSpacing: '1.2px',
                   textTransform: 'uppercase',
                   color: 'var(--muted)',
                   textAlign: 'left',
@@ -156,57 +156,57 @@ export default function ScoutWatchlist() {
                 <tr
                   key={wp.playerId}
                   style={{
-                    borderBottom: i < filteredList.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                    borderBottom: i < filteredList.length - 1 ? '1px solid var(--surface-tint-2)' : 'none',
                     cursor: 'pointer',
                   }}
                   onClick={() => navigate(`/player/${player.id}/dashboard`)}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(224,172,68,0.05)'}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-bg-subtle)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
-                  <td style={{ padding: '12px 14px' }}>
+                  <td style={{ padding: '12px 16px' }}>
                     <span style={{
-                      padding: '3px 10px',
-                      background: wp.priority === 'high' ? 'rgba(229,57,53,0.15)' : wp.priority === 'medium' ? 'rgba(255,193,7,0.15)' : 'rgba(158,158,158,0.15)',
-                      color: wp.priority === 'high' ? '#e53935' : wp.priority === 'medium' ? '#ffc107' : 'var(--muted)',
-                      borderRadius: 4,
+                      padding: '5px 10px',
+                      background: wp.priority === 'high' ? 'var(--color-negative-bg)' : wp.priority === 'medium' ? 'var(--color-warning-bg)' : 'rgba(158,158,158,0.15)',
+                      color: wp.priority === 'high' ? 'var(--color-negative)' : wp.priority === 'medium' ? 'var(--color-warning)' : 'var(--muted)',
+                      borderRadius: 6,
                       fontFamily: 'var(--font-body)',
-                      fontSize: 9,
+                      fontSize: 10,
                       fontWeight: 600,
                       textTransform: 'uppercase',
                     }}>
                       {wp.priority}
                     </span>
                   </td>
-                  <td style={{ padding: '12px 14px', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600, color: 'var(--text-bright)' }}>
+                  <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', fontSize: 14, fontWeight: 600, color: 'var(--text-bright)' }}>
                     {getPlayerFullName(player)}
                   </td>
-                  <td style={{ padding: '12px 14px', fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text)' }}>{player.team}</td>
-                  <td style={{ padding: '12px 14px' }}>
+                  <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text)' }}>{player.team}</td>
+                  <td style={{ padding: '12px 16px' }}>
                     <span style={{
-                      padding: '2px 8px',
+                      padding: '4px 8px',
                       background: player.level === 'AAA' ? 'rgba(76,175,80,0.2)' : player.level === 'AA' ? 'rgba(33,150,243,0.2)' : 'rgba(158,158,158,0.2)',
-                      color: player.level === 'AAA' ? '#4caf50' : player.level === 'AA' ? '#2196f3' : 'var(--muted)',
-                      borderRadius: 4,
+                      color: player.level === 'AAA' ? 'var(--color-positive)' : player.level === 'AA' ? 'var(--color-info)' : 'var(--muted)',
+                      borderRadius: 6,
                       fontFamily: 'var(--font-body)',
-                      fontSize: 10,
+                      fontSize: 11,
                       fontWeight: 600,
                     }}>{player.level}</span>
                   </td>
-                  <td style={{ padding: '12px 14px', fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text)' }}>{player.position}</td>
-                  <td style={{ padding: '12px 14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontFamily: 'var(--font-heading)', fontSize: 14, fontWeight: 600, color: 'var(--text-bright)' }}>{player.avgEV}</span>
+                  <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text)' }}>{player.position}</td>
+                  <td style={{ padding: '12px 16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 600, color: 'var(--text-bright)' }}>{player.avgEV}</span>
                       <ChangeIndicator value={(Math.random() - 0.3) * 3} />
                     </div>
                   </td>
-                  <td style={{ padding: '12px 14px', fontFamily: 'var(--font-heading)', fontSize: 14, fontWeight: 600, color: 'var(--accent)' }}>{player.maxEV}</td>
-                  <td style={{ padding: '12px 14px' }}>
+                  <td style={{ padding: '12px 16px', fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 600, color: 'var(--accent)' }}>{player.maxEV}</td>
+                  <td style={{ padding: '12px 16px' }}>
                     <Sparkline data={generateTrend(player.avgEV, 3)} width={50} height={18} showEndDot />
                   </td>
-                  <td style={{ padding: '12px 14px', fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--muted)' }}>
+                  <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--muted)' }}>
                     {new Date(wp.lastVisit).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </td>
-                  <td style={{ padding: '12px 14px', fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text)', maxWidth: 200 }}>
+                  <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text)', maxWidth: 200 }}>
                     {wp.notes}
                   </td>
                 </tr>

@@ -34,6 +34,23 @@ const personas: Array<{ id: Persona; title: string; subtitle: string; descriptio
     ),
   },
   {
+    id: 'pitching_coach',
+    title: 'Pitching Coach',
+    subtitle: 'Pitcher Development',
+    description: 'Develop arms, manage bullpen workloads, design pitches, and prepare game plans with data-driven insights.',
+    icon: (
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <circle cx="8" cy="6" r="3" />
+        <path d="M8 9c-3 0-5 2-5 4v2" />
+        <path d="M11 8l4-4" />
+        <path d="M15 4l2.5-.5L18 6l-3 3" />
+        <path d="M18 6c1-1 2.5-.5 3 0s1 2 0 3" />
+        <path d="M12 17a5 5 0 0 1 10 0" />
+        <circle cx="17" cy="13" r="2" />
+      </svg>
+    ),
+  },
+  {
     id: 'agent',
     title: 'Agent',
     subtitle: 'Client Representation',
@@ -48,6 +65,19 @@ const personas: Array<{ id: Persona; title: string; subtitle: string; descriptio
       </svg>
     ),
   },
+  {
+    id: 'player',
+    title: 'Player',
+    subtitle: 'Personal Analytics',
+    description: 'Track your development across hitting, pitching, and strength. See how you stack up and where to focus next.',
+    icon: (
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <circle cx="12" cy="7" r="4" />
+        <path d="M5.5 21v-2a6.5 6.5 0 0 1 13 0v2" />
+        <path d="M17 10l2 2 4-4" />
+      </svg>
+    ),
+  },
 ]
 
 export default function LoginScreen() {
@@ -56,7 +86,10 @@ export default function LoginScreen() {
 
   const handlePersonaSelect = (persona: Persona) => {
     setPersona(persona)
-    navigate(`/${persona}/dashboard`)
+    const route = persona === 'player' ? '/player/3000002/dashboard'
+      : persona === 'pitching_coach' ? '/pitching-coach/dashboard'
+      : `/${persona}/dashboard`
+    navigate(route)
   }
 
   return (
@@ -91,32 +124,33 @@ export default function LoginScreen() {
         `,
       }} />
 
-      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: 900, padding: '48px 40px 36px' }}>
+      <div className="anim-fade-in" style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: 1280, width: '100%', padding: '48px 24px 36px' }}>
         {/* Logo */}
         <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 28, letterSpacing: '8px', color: 'var(--accent-bright)', marginBottom: 4 }}>BASELINE</div>
         <img src="/branding/icon.png" alt="Baseline" style={{ width: 80, height: 80, objectFit: 'contain', marginBottom: 8 }} />
-        <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '2px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 32 }}>
+        <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, letterSpacing: '2px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 36 }}>
           Professional Demo
         </div>
 
         {/* Persona Selection */}
-        <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 12, letterSpacing: '2px', color: 'var(--text)', textTransform: 'uppercase', marginBottom: 20 }}>
+        <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 13, letterSpacing: '1.5px', color: 'var(--text)', textTransform: 'uppercase', marginBottom: 24 }}>
           Select Your Role
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, width: '100%', marginBottom: 32 }}>
-          {personas.map(persona => (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 18, width: '100%', marginBottom: 36 }}>
+          {personas.map((persona, i) => (
             <button
+              className={`anim-scale-in anim-delay-${i + 2}`}
               key={persona.id}
               onClick={() => handlePersonaSelect(persona.id)}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                padding: '28px 24px',
+                padding: '28px 20px',
                 background: 'var(--panel)',
                 border: '1px solid var(--orange-border)',
-                borderRadius: 8,
+                borderRadius: 10,
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 textAlign: 'center',
@@ -135,13 +169,13 @@ export default function LoginScreen() {
               <div style={{ color: 'var(--accent)', marginBottom: 16 }}>
                 {persona.icon}
               </div>
-              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 18, fontWeight: 700, color: 'var(--text-bright)', marginBottom: 4 }}>
+              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 20, fontWeight: 700, color: 'var(--text-bright)', marginBottom: 6 }}>
                 {persona.title}
               </div>
-              <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '1.5px', color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 12 }}>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '1.2px', color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 14 }}>
                 {persona.subtitle}
               </div>
-              <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--muted)', lineHeight: 1.55 }}>
                 {persona.description}
               </div>
             </button>
@@ -151,24 +185,19 @@ export default function LoginScreen() {
         {/* Divider */}
         <div style={{ display: 'flex', alignItems: 'center', width: '100%', marginBottom: 24 }}>
           <div style={{ flex: 1, height: 1, background: 'var(--orange-border)' }} />
-          <span style={{ padding: '0 16px', fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase' }}>
-            Or explore legacy demos
+          <span style={{ padding: '0 18px', fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '1.2px', color: 'var(--muted)', textTransform: 'uppercase' }}>
+            Or explore facility demo
           </span>
           <div style={{ flex: 1, height: 1, background: 'var(--orange-border)' }} />
         </div>
 
-        {/* Legacy demo buttons */}
-        <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 400 }}>
+        {/* Legacy demo button */}
+        <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
           <button onClick={() => navigate('/facility/sessions')} style={{
-            flex: 1, padding: '12px 24px', background: 'transparent', border: '1px solid var(--muted)', borderRadius: 4,
-            fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 11, letterSpacing: '2px',
+            padding: '13px 36px', background: 'transparent', border: '1px solid var(--muted)', borderRadius: 6,
+            fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 12, letterSpacing: '1.5px',
             textTransform: 'uppercase', color: 'var(--muted)', cursor: 'pointer', transition: 'all 0.2s',
           }} onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)' }} onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--muted)'; e.currentTarget.style.color = 'var(--muted)' }}>Facility Demo</button>
-          <button onClick={() => navigate('/player/3000002/dashboard')} style={{
-            flex: 1, padding: '12px 24px', background: 'transparent', border: '1px solid var(--muted)', borderRadius: 4,
-            fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 11, letterSpacing: '2px',
-            textTransform: 'uppercase', color: 'var(--muted)', cursor: 'pointer', transition: 'all 0.2s',
-          }} onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)' }} onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--muted)'; e.currentTarget.style.color = 'var(--muted)' }}>Player Demo</button>
         </div>
       </div>
     </div>

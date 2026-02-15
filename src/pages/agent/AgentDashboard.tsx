@@ -68,35 +68,35 @@ export default function AgentDashboard() {
   const cardStyle: React.CSSProperties = {
     background: 'var(--panel)',
     border: '1px solid var(--orange-border)',
-    borderRadius: 8,
-    padding: 20,
-    boxShadow: 'inset 0 1px 0 rgba(224,172,68,0.1)',
+    borderRadius: 10,
+    padding: 24,
+    boxShadow: 'inset 0 1px 0 var(--accent-bg-medium)',
   }
 
   const secTitle: React.CSSProperties = {
     fontFamily: 'var(--font-heading)',
     fontWeight: 700,
-    fontSize: 11,
+    fontSize: 12,
     textTransform: 'uppercase',
-    letterSpacing: '2px',
+    letterSpacing: '1.5px',
     color: 'var(--accent)',
-    marginBottom: 16,
+    marginBottom: 18,
   }
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+    <div style={{ maxWidth: 1400, margin: '0 auto' }}>
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
+      <div className="anim-fade-in" style={{ marginBottom: 24 }}>
         <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 24, color: 'var(--text-bright)', marginBottom: 4 }}>
           Agent Dashboard
         </h1>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--muted)' }}>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--muted)' }}>
           Client development tracking and contract preparation
         </p>
       </div>
 
       {/* Quick Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 32 }}>
+      <div className="anim-slide-up anim-delay-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 32 }}>
         {[
           { label: 'Active Clients', value: agentClients.length.toString(), sub: 'In MiLB system' },
           { label: 'Total Value', value: '$2.77M', sub: 'Combined contracts' },
@@ -104,16 +104,16 @@ export default function AgentDashboard() {
           { label: 'Avg Growth', value: '+3.5%', sub: 'YoY improvement' },
         ].map((stat, i) => (
           <div key={i} style={{ ...cardStyle, padding: 16 }}>
-            <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 6 }}>{stat.label}</div>
-            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 28, fontWeight: 700, color: 'var(--accent)', marginBottom: 2 }}>{stat.value}</div>
-            <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--muted)' }}>{stat.sub}</div>
+            <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '1.2px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>{stat.label}</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 28, fontWeight: 700, color: 'var(--accent)', marginBottom: 2 }}>{stat.value}</div>
+            <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--muted)' }}>{stat.sub}</div>
           </div>
         ))}
       </div>
 
       {/* Client Cards */}
       <div style={secTitle}>Client Development Resumes</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div className="anim-slide-up anim-delay-2" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         {agentClients.map((client) => {
           const player = players.find(p => p.id === client.playerId)
           if (!player) return null
@@ -128,32 +128,32 @@ export default function AgentDashboard() {
                       <div style={{ fontFamily: 'var(--font-heading)', fontSize: 20, fontWeight: 700, color: 'var(--text-bright)' }}>
                         {getPlayerFullName(player)}
                       </div>
-                      <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
+                      <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--muted)', marginTop: 2 }}>
                         {player.position} • {player.team} • {player.level}
                       </div>
                     </div>
                   </div>
 
                   {/* Contract Info */}
-                  <div style={{ background: 'rgba(224,172,68,0.05)', border: '1px solid rgba(224,172,68,0.15)', borderRadius: 6, padding: 12, marginBottom: 16 }}>
+                  <div style={{ background: 'var(--accent-bg-subtle)', border: '1px solid var(--accent-border-subtle)', borderRadius: 8, padding: 14, marginBottom: 16 }}>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
                       <div>
-                        <div style={{ fontFamily: 'var(--font-body)', fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Current Value</div>
-                        <div style={{ fontFamily: 'var(--font-heading)', fontSize: 18, fontWeight: 700, color: 'var(--accent)' }}>{formatCurrency(client.contractValue)}</div>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Current Value</div>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 700, color: 'var(--accent)' }}>{formatCurrency(client.contractValue)}</div>
                       </div>
                       <div>
-                        <div style={{ fontFamily: 'var(--font-body)', fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Service Time</div>
-                        <div style={{ fontFamily: 'var(--font-heading)', fontSize: 18, fontWeight: 700, color: 'var(--text-bright)' }}>{client.serviceTime}</div>
+                        <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Service Time</div>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 700, color: 'var(--text-bright)' }}>{client.serviceTime}</div>
                       </div>
                     </div>
-                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(224,172,68,0.15)' }}>
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--accent-border-subtle)' }}>
                       <span style={{
-                        padding: '4px 10px',
-                        background: 'rgba(33,150,243,0.15)',
-                        color: '#2196f3',
-                        borderRadius: 4,
+                        padding: '5px 10px',
+                        background: 'var(--color-info-bg)',
+                        color: 'var(--color-info)',
+                        borderRadius: 6,
                         fontFamily: 'var(--font-body)',
-                        fontSize: 10,
+                        fontSize: 11,
                         fontWeight: 600,
                       }}>
                         {client.arbStatus}
@@ -162,40 +162,40 @@ export default function AgentDashboard() {
                   </div>
 
                   {/* Growth Metrics */}
-                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '1px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 10 }}>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '1px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 10 }}>
                     Season-Over-Season Growth
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
                     <div>
-                      <div style={{ fontFamily: 'var(--font-body)', fontSize: 9, color: 'var(--muted)', marginBottom: 4 }}>Avg EV</div>
+                      <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--muted)', marginBottom: 4 }}>Avg EV</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <span style={{ fontFamily: 'var(--font-heading)', fontSize: 16, fontWeight: 700, color: 'var(--text-bright)' }}>{player.avgEV}</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 16, fontWeight: 700, color: 'var(--text-bright)' }}>{player.avgEV}</span>
                         <ChangeIndicator value={client.seasonGrowth.avgEV} size="md" />
                       </div>
-                      <Sparkline data={generateTrend(player.avgEV, 4)} width={60} height={20} />
+                      <Sparkline data={generateTrend(player.avgEV, 4)} width={80} height={20} />
                     </div>
                     <div>
-                      <div style={{ fontFamily: 'var(--font-body)', fontSize: 9, color: 'var(--muted)', marginBottom: 4 }}>Max EV</div>
+                      <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--muted)', marginBottom: 4 }}>Max EV</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <span style={{ fontFamily: 'var(--font-heading)', fontSize: 16, fontWeight: 700, color: 'var(--text-bright)' }}>{player.maxEV}</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 16, fontWeight: 700, color: 'var(--text-bright)' }}>{player.maxEV}</span>
                         <ChangeIndicator value={client.seasonGrowth.maxEV} size="md" />
                       </div>
-                      <Sparkline data={generateTrend(player.maxEV, 5)} width={60} height={20} />
+                      <Sparkline data={generateTrend(player.maxEV, 5)} width={80} height={20} />
                     </div>
                     <div>
-                      <div style={{ fontFamily: 'var(--font-body)', fontSize: 9, color: 'var(--muted)', marginBottom: 4 }}>Barrel %</div>
+                      <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--muted)', marginBottom: 4 }}>Barrel %</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <span style={{ fontFamily: 'var(--font-heading)', fontSize: 16, fontWeight: 700, color: 'var(--text-bright)' }}>14.1</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 16, fontWeight: 700, color: 'var(--text-bright)' }}>14.1</span>
                         <ChangeIndicator value={client.seasonGrowth.barrelPct} size="md" />
                       </div>
-                      <Sparkline data={generateTrend(14, 3)} width={60} height={20} />
+                      <Sparkline data={generateTrend(14, 3)} width={80} height={20} />
                     </div>
                   </div>
                 </div>
 
                 {/* Right: Talking Points */}
                 <div style={{ flex: 1, borderLeft: '1px solid var(--orange-border)', paddingLeft: 24 }}>
-                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '1.5px', color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 12 }}>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '1.2px', color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 12 }}>
                     Arbitration Talking Points
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -203,13 +203,13 @@ export default function AgentDashboard() {
                       <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                         <div style={{
                           width: 20, height: 20, borderRadius: '50%',
-                          background: 'rgba(76,175,80,0.15)', color: '#4caf50',
+                          background: 'var(--color-positive-bg)', color: 'var(--color-positive)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 600, flexShrink: 0,
+                          fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, flexShrink: 0,
                         }}>
                           {i + 1}
                         </div>
-                        <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text)', lineHeight: 1.5, margin: 0 }}>
+                        <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text)', lineHeight: 1.5, margin: 0 }}>
                           {point}
                         </p>
                       </div>
@@ -217,17 +217,17 @@ export default function AgentDashboard() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div style={{ display: 'flex', gap: 12, marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ display: 'flex', gap: 12, marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--surface-tint-2)' }}>
                     <button
                       onClick={() => navigate(`/player/${player.id}/dashboard`)}
                       style={{
-                        padding: '10px 20px',
+                        padding: '12px 20px',
                         background: 'var(--accent)',
                         border: 'none',
-                        borderRadius: 4,
+                        borderRadius: 6,
                         color: '#000',
                         fontFamily: 'var(--font-body)',
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: 600,
                         letterSpacing: '1px',
                         textTransform: 'uppercase',
@@ -239,13 +239,13 @@ export default function AgentDashboard() {
                     </button>
                     <button
                       style={{
-                        padding: '10px 20px',
+                        padding: '12px 20px',
                         background: 'transparent',
                         border: '1px solid var(--muted)',
-                        borderRadius: 4,
+                        borderRadius: 6,
                         color: 'var(--text)',
                         fontFamily: 'var(--font-body)',
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: 600,
                         letterSpacing: '1px',
                         textTransform: 'uppercase',
@@ -257,13 +257,13 @@ export default function AgentDashboard() {
                     </button>
                     <button
                       style={{
-                        padding: '10px 20px',
+                        padding: '12px 20px',
                         background: 'transparent',
                         border: '1px solid var(--muted)',
-                        borderRadius: 4,
+                        borderRadius: 6,
                         color: 'var(--text)',
                         fontFamily: 'var(--font-body)',
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: 600,
                         letterSpacing: '1px',
                         textTransform: 'uppercase',
@@ -282,14 +282,14 @@ export default function AgentDashboard() {
       </div>
 
       {/* Vision Statement */}
-      <div style={{
+      <div className="anim-slide-up anim-delay-3" style={{
         marginTop: 32,
         padding: 24,
-        background: 'linear-gradient(135deg, rgba(224,172,68,0.05) 0%, rgba(224,172,68,0.02) 100%)',
+        background: 'linear-gradient(135deg, var(--accent-bg-subtle) 0%, var(--accent-bg-subtle) 100%)',
         border: '1px solid rgba(224,172,68,0.2)',
-        borderRadius: 8,
+        borderRadius: 10,
       }}>
-        <div style={{ fontFamily: 'var(--font-heading)', fontSize: 11, letterSpacing: '2px', color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 12 }}>
+        <div style={{ fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '1.5px', color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 12 }}>
           The Baseline Advantage
         </div>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text)', lineHeight: 1.7, margin: 0 }}>

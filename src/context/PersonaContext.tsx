@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
 
-export type Persona = 'scout' | 'coach' | 'agent' | null
+export type Persona = 'scout' | 'coach' | 'pitching_coach' | 'agent' | 'player' | null
 
 interface PersonaContextType {
   persona: Persona
@@ -27,7 +27,9 @@ export function PersonaProvider({ children }: { children: ReactNode }) {
 
   const personaLabel = persona === 'scout' ? 'Scout'
     : persona === 'coach' ? 'Hitting Coach'
+    : persona === 'pitching_coach' ? 'Pitching Coach'
     : persona === 'agent' ? 'Agent'
+    : persona === 'player' ? 'Player'
     : ''
 
   return (

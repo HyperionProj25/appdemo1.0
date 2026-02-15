@@ -15,8 +15,8 @@ export default function ChangeIndicator({
   const isNegative = value < 0
   const isNeutral = value === 0
 
-  const color = isPositive ? '#4caf50' : isNegative ? '#e53935' : 'var(--muted)'
-  const fontSize = size === 'sm' ? 10 : 12
+  const color = isPositive ? 'var(--color-positive)' : isNegative ? 'var(--color-negative)' : 'var(--muted)'
+  const fontSize = size === 'sm' ? 11 : 14
 
   const displayValue = Math.abs(value).toFixed(1)
 
@@ -24,7 +24,7 @@ export default function ChangeIndicator({
     <span style={{
       display: 'inline-flex',
       alignItems: 'center',
-      gap: 2,
+      gap: 3,
       fontFamily: 'var(--font-body)',
       fontSize,
       fontWeight: 600,
@@ -32,8 +32,8 @@ export default function ChangeIndicator({
     }}>
       {showArrow && !isNeutral && (
         <svg
-          width={size === 'sm' ? 8 : 10}
-          height={size === 'sm' ? 8 : 10}
+          width={size === 'sm' ? 9 : 12}
+          height={size === 'sm' ? 9 : 12}
           viewBox="0 0 10 10"
           fill="currentColor"
           style={{ transform: isNegative ? 'rotate(180deg)' : 'none' }}

@@ -19,6 +19,7 @@ export default function PlayerEcosystem() {
   const player = getPlayer(playerId || '3000002')
   const [activeTab, setActiveTab] = useState<'events' | 'locations' | 'coaches'>('events')
   const [selectedTech, setSelectedTech] = useState<Set<TechFilter>>(new Set())
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   if (!player) return <div>Player not found</div>
   const name = getPlayerName(player)
@@ -48,21 +49,21 @@ export default function PlayerEcosystem() {
 
   return (
     <div style={{ display: 'flex', height: '100%', width: '100%', overflow: 'hidden' }}>
-      <Sidebar playerName={name} playerId={playerId} />
+      <Sidebar playerName={name} playerId={playerId} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(c => !c)} />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', padding: '20px 28px' }}>
         {/* Header */}
-        <div className="anim-fade-in" style={{ textAlign: 'center', marginBottom: 16 }}>
+        <div className="anim-fade-in" style={{ textAlign: 'center', marginBottom: 18 }}>
           <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 26, letterSpacing: '5px', textTransform: 'uppercase' }}>BASELINE'S ECOSYSTEM</h1>
-          <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6, fontStyle: 'italic' }}>Find events, locations and coaches within the Baseline network</p>
+          <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 8, fontStyle: 'italic' }}>Find events, locations and coaches within the Baseline network</p>
         </div>
 
         {/* Tabs */}
-        <div className="anim-fade-in anim-delay-1" style={{ display: 'flex', border: '1px solid var(--orange-border)', borderRadius: 6, overflow: 'hidden', marginBottom: 20 }}>
+        <div className="anim-fade-in anim-delay-1" style={{ display: 'flex', border: '1px solid var(--orange-border)', borderRadius: 8, overflow: 'hidden', marginBottom: 22 }}>
           {(['events', 'locations', 'coaches'] as const).map(tab => (
             <button key={tab} style={{
-              flex: 1, padding: '11px 0', fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 12,
-              textTransform: 'uppercase', letterSpacing: '2px', border: 'none',
+              flex: 1, padding: '12px 0', fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 13,
+              textTransform: 'uppercase', letterSpacing: '1.5px', border: 'none',
               borderRight: '1px solid var(--orange-border)', cursor: 'pointer',
               background: 'transparent',
               color: activeTab === tab ? 'var(--accent)' : 'var(--muted)',
@@ -73,7 +74,7 @@ export default function PlayerEcosystem() {
         </div>
 
         {/* Tech filter cards — selectable */}
-        <div className="anim-fade-in anim-delay-2" style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+        <div className="anim-fade-in anim-delay-2" style={{ display: 'flex', gap: 14, marginBottom: 22 }}>
           {techFilters.map((t) => {
             const isActive = selectedTech.has(t)
             return (
@@ -83,12 +84,12 @@ export default function PlayerEcosystem() {
                 style={{
                   background: isActive ? 'rgba(224,172,68,0.12)' : 'var(--card-bg)',
                   border: `1px solid ${isActive ? 'var(--accent)' : 'var(--card-border)'}`,
-                  borderRadius: 6,
-                  padding: '14px 18px',
+                  borderRadius: 8,
+                  padding: '16px 20px',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: 6,
+                  gap: 8,
                   minWidth: 100,
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
@@ -103,12 +104,12 @@ export default function PlayerEcosystem() {
                 <span style={{
                   fontFamily: 'var(--font-heading)',
                   fontWeight: 700,
-                  fontSize: 11,
+                  fontSize: 12,
                   letterSpacing: '1px',
                   textTransform: 'uppercase',
                   color: isActive ? 'var(--accent)' : 'var(--text)',
                   transition: 'color 0.2s',
-                }}>{t.toUpperCase()} <span style={{ fontSize: 8 }}>TM</span></span>
+                }}>{t.toUpperCase()} <span style={{ fontSize: 9 }}>TM</span></span>
               </button>
             )
           })}
@@ -116,14 +117,14 @@ export default function PlayerEcosystem() {
             <button
               onClick={() => setSelectedTech(new Set())}
               style={{
-                padding: '8px 14px',
+                padding: '10px 16px',
                 background: 'none',
                 border: '1px solid var(--card-border)',
-                borderRadius: 6,
+                borderRadius: 8,
                 color: 'var(--muted)',
                 fontFamily: 'var(--font-heading)',
                 fontWeight: 700,
-                fontSize: 10,
+                fontSize: 11,
                 letterSpacing: '1px',
                 textTransform: 'uppercase',
                 cursor: 'pointer',
@@ -137,25 +138,25 @@ export default function PlayerEcosystem() {
         <div className="tab-content-enter">
           {activeTab === 'events' && (
             <div>
-              <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 16, color: 'var(--accent)', letterSpacing: '2px', marginBottom: 12 }}>JUNE 2026</h2>
+              <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 16, color: 'var(--accent)', letterSpacing: '1.5px', marginBottom: 14 }}>JUNE 2026</h2>
               {filteredEvents.length === 0 && (
-                <div style={{ color: 'var(--muted)', fontSize: 12, fontStyle: 'italic', padding: 20, textAlign: 'center' }}>No events match the selected technology filters.</div>
+                <div style={{ color: 'var(--muted)', fontSize: 13, fontStyle: 'italic', padding: 20, textAlign: 'center' }}>No events match the selected technology filters.</div>
               )}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18 }}>
                 {filteredEvents.map((evt, i) => (
-                  <div key={i} className="anim-slide-up" style={{ background: 'var(--card-bg)', border: '1px solid var(--orange-border)', borderRadius: 6, padding: '18px', width: 380, boxShadow: 'inset 0 0 20px rgba(224,172,68,0.04)', animationDelay: `${i * 0.08}s` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <div key={i} className="anim-slide-up" style={{ background: 'var(--card-bg)', border: '1px solid var(--orange-border)', borderRadius: 8, padding: '20px', width: 380, boxShadow: 'inset 0 0 20px rgba(224,172,68,0.04)', animationDelay: `${i * 0.08}s` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                       <div>
-                        <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 14, textTransform: 'uppercase', letterSpacing: '1px' }}>{evt.name}</h3>
-                        <div style={{ color: 'var(--accent)', fontSize: 11, fontStyle: 'italic' }}>{evt.location}</div>
+                        <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 15, textTransform: 'uppercase', letterSpacing: '1px' }}>{evt.name}</h3>
+                        <div style={{ color: 'var(--accent)', fontSize: 12, fontStyle: 'italic' }}>{evt.location}</div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 700, fontSize: 13, textTransform: 'uppercase' }}>{evt.date}</div>
-                        <div style={{ fontSize: 10, color: 'var(--muted)' }}>{evt.ageRange}</div>
+                        <div style={{ fontWeight: 700, fontSize: 14, textTransform: 'uppercase' }}>{evt.date}</div>
+                        <div style={{ fontSize: 11, color: 'var(--muted)' }}>{evt.ageRange}</div>
                       </div>
                     </div>
-                    <p style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.4, marginBottom: 8 }}>{evt.description}</p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5, marginBottom: 10 }}>{evt.description}</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {evt.technologies.map((t, j) => {
                         const isHighlight = selectedTech.size > 0 && [...selectedTech].some(s => t.toLowerCase().includes(s.toLowerCase()) || s.toLowerCase().includes(t.toLowerCase().replace(' motion', '')))
                         return (
@@ -176,14 +177,14 @@ export default function PlayerEcosystem() {
           {activeTab === 'locations' && (
             <div>
               {filteredLocations.length === 0 && (
-                <div style={{ color: 'var(--muted)', fontSize: 12, fontStyle: 'italic', padding: 20, textAlign: 'center' }}>No locations match the selected technology filters.</div>
+                <div style={{ color: 'var(--muted)', fontSize: 13, fontStyle: 'italic', padding: 20, textAlign: 'center' }}>No locations match the selected technology filters.</div>
               )}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18 }}>
                 {filteredLocations.map((loc, i) => (
-                  <div key={i} className="anim-slide-up" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 6, padding: '18px', width: 260, animationDelay: `${i * 0.08}s` }}>
-                    <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2 }}>{loc.name}</h3>
-                    <div style={{ color: 'var(--accent)', fontSize: 11, fontStyle: 'italic', marginBottom: 8 }}>{loc.city}</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  <div key={i} className="anim-slide-up" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 8, padding: '20px', width: 260, animationDelay: `${i * 0.08}s` }}>
+                    <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>{loc.name}</h3>
+                    <div style={{ color: 'var(--accent)', fontSize: 12, fontStyle: 'italic', marginBottom: 10 }}>{loc.city}</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {loc.technologies.map((t, j) => {
                         const isHighlight = selectedTech.size > 0 && [...selectedTech].some(s => t.toLowerCase().includes(s.toLowerCase()) || s.toLowerCase().includes(t.toLowerCase().replace(' motion', '')))
                         return (
@@ -204,22 +205,22 @@ export default function PlayerEcosystem() {
           {activeTab === 'coaches' && (
             <div>
               {filteredCoaches.length === 0 && (
-                <div style={{ color: 'var(--muted)', fontSize: 12, fontStyle: 'italic', padding: 20, textAlign: 'center' }}>No coaches match the selected technology filters.</div>
+                <div style={{ color: 'var(--muted)', fontSize: 13, fontStyle: 'italic', padding: 20, textAlign: 'center' }}>No coaches match the selected technology filters.</div>
               )}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18 }}>
                 {filteredCoaches.map((c, i) => (
-                  <div key={i} className="anim-slide-up" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 6, padding: '18px', width: 260, textAlign: 'center', animationDelay: `${i * 0.08}s` }}>
-                    <div style={{ marginBottom: 8 }}>
+                  <div key={i} className="anim-slide-up" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 8, padding: '20px', width: 260, textAlign: 'center', animationDelay: `${i * 0.08}s` }}>
+                    <div style={{ marginBottom: 10 }}>
                       <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
                         <circle cx="22" cy="12" r="6" fill="var(--muted)" opacity="0.5" />
                         <path d="M12 42c0-6 4-12 10-12s10 6 10 12" fill="var(--muted)" opacity="0.5" />
                         <path d="M30 18l6-8" stroke="var(--muted)" strokeWidth="1.5" opacity="0.5" />
                       </svg>
                     </div>
-                    <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 14, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 2 }}>{c.name}</h3>
-                    <div style={{ color: 'var(--accent)', fontSize: 11, fontStyle: 'italic', marginBottom: 6 }}>{c.city}</div>
-                    <p style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.4, marginBottom: 8, whiteSpace: 'pre-line' }}>{c.description}</p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
+                    <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 15, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 4 }}>{c.name}</h3>
+                    <div style={{ color: 'var(--accent)', fontSize: 12, fontStyle: 'italic', marginBottom: 8 }}>{c.city}</div>
+                    <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5, marginBottom: 10, whiteSpace: 'pre-line' }}>{c.description}</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
                       {c.technologies.map((t, j) => {
                         const isHighlight = selectedTech.size > 0 && [...selectedTech].some(s => t.toLowerCase().includes(s.toLowerCase()) || s.toLowerCase().includes(t.toLowerCase().replace(' motion', '')))
                         return (
@@ -242,4 +243,4 @@ export default function PlayerEcosystem() {
   )
 }
 
-const pillStyle: React.CSSProperties = { display: 'inline-block', padding: '4px 12px', borderRadius: 10, fontSize: 10, fontWeight: 700, letterSpacing: '0.5px', background: '#555', color: 'var(--text)', transition: 'all 0.2s' }
+const pillStyle: React.CSSProperties = { display: 'inline-block', padding: '5px 14px', borderRadius: 10, fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', background: '#555', color: 'var(--text)', transition: 'all 0.2s' }

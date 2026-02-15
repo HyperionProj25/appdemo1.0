@@ -8,8 +8,8 @@ interface SparklineProps {
 
 export default function Sparkline({
   data,
-  width = 80,
-  height = 24,
+  width = 90,
+  height = 28,
   color = 'var(--accent)',
   showEndDot = false,
 }: SparklineProps) {
@@ -32,7 +32,7 @@ export default function Sparkline({
 
   // Determine trend color
   const isUpward = data[data.length - 1] > data[0]
-  const trendColor = isUpward ? '#4caf50' : data[data.length - 1] < data[0] ? '#e53935' : color
+  const trendColor = isUpward ? 'var(--color-positive)' : data[data.length - 1] < data[0] ? 'var(--color-negative)' : color
 
   return (
     <svg width={width} height={height} style={{ display: 'block' }}>
@@ -40,7 +40,7 @@ export default function Sparkline({
         points={points}
         fill="none"
         stroke={trendColor}
-        strokeWidth="1.5"
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
         style={{ opacity: 0.8 }}
@@ -49,7 +49,7 @@ export default function Sparkline({
         <circle
           cx={lastX}
           cy={lastY}
-          r="2.5"
+          r="3"
           fill={trendColor}
         />
       )}

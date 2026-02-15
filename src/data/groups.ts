@@ -15,9 +15,9 @@ export const groups: Group[] = [
     athleteCount: 3,
     technologies: ['Hawkins', 'HitTrax', 'Trackman', 'Blast Motion'],
     players: [
-      { name: 'Griswold, Abby', year: 2026 },
-      { name: 'Baker, Sarah', year: 2026 },
-      { name: 'Daniels, Brea', year: 2026 },
+      { name: 'Ridley, Tessa', year: 2026 },
+      { name: 'Hewitt, Nora', year: 2026 },
+      { name: 'Laine, Piper', year: 2026 },
     ],
   },
   {
@@ -27,11 +27,11 @@ export const groups: Group[] = [
     athleteCount: 5,
     technologies: ['Trackman', 'HitTrax'],
     players: [
-      { name: 'Bravo, Angel', year: 2026 },
-      { name: 'Lucq, Mason', year: 2026 },
-      { name: 'Duncan, Wyatt', year: 2026 },
-      { name: 'Lucq, Mason', year: 2026 },
-      { name: 'Duncan, Wyatt', year: 2025 },
+      { name: 'Vega, Darius', year: 2026 },
+      { name: 'Briggs, Colton', year: 2026 },
+      { name: 'Thornton, Jace', year: 2026 },
+      { name: 'Briggs, Colton', year: 2026 },
+      { name: 'Thornton, Jace', year: 2025 },
     ],
   },
 ];

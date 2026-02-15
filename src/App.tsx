@@ -22,10 +22,23 @@ import ContactPage from './pages/website/ContactPage'
 import ScoutLayout from './pages/scout/ScoutLayout'
 import ScoutDashboard from './pages/scout/ScoutDashboard'
 import ScoutWatchlist from './pages/scout/ScoutWatchlist'
+import ScoutCompare from './pages/scout/ScoutCompare'
+import ScoutReports from './pages/scout/ScoutReports'
+import ScoutPipeline from './pages/scout/ScoutPipeline'
 import CoachLayout from './pages/coach/CoachLayout'
 import CoachDashboard from './pages/coach/CoachDashboard'
 import CoachRoster from './pages/coach/CoachRoster'
 import CoachMatchupPrep from './pages/coach/CoachMatchupPrep'
+import CoachTrends from './pages/coach/CoachTrends'
+import CoachDevelopment from './pages/coach/CoachDevelopment'
+import CoachSessions from './pages/coach/CoachSessions'
+import PitchingCoachLayout from './pages/pitching-coach/PitchingCoachLayout'
+import PitchingCoachDashboard from './pages/pitching-coach/PitchingCoachDashboard'
+import PitchingCoachStaff from './pages/pitching-coach/PitchingCoachStaff'
+import PitchingCoachArsenal from './pages/pitching-coach/PitchingCoachArsenal'
+import PitchingCoachBullpen from './pages/pitching-coach/PitchingCoachBullpen'
+import PitchingCoachGamePlan from './pages/pitching-coach/PitchingCoachGamePlan'
+import PitchingCoachDevelopment from './pages/pitching-coach/PitchingCoachDevelopment'
 import AgentLayout from './pages/agent/AgentLayout'
 import AgentDashboard from './pages/agent/AgentDashboard'
 
@@ -41,6 +54,9 @@ export default function App() {
         <Route path="dashboard" element={<ScoutDashboard />} />
         <Route path="watchlist" element={<ScoutWatchlist />} />
         <Route path="territory" element={<ScoutWatchlist />} />
+        <Route path="compare" element={<ScoutCompare />} />
+        <Route path="reports" element={<ScoutReports />} />
+        <Route path="pipeline" element={<ScoutPipeline />} />
       </Route>
 
       {/* Coach Routes */}
@@ -49,7 +65,20 @@ export default function App() {
         <Route path="dashboard" element={<CoachDashboard />} />
         <Route path="roster" element={<CoachRoster />} />
         <Route path="matchup" element={<CoachMatchupPrep />} />
-        <Route path="trends" element={<CoachDashboard />} />
+        <Route path="trends" element={<CoachTrends />} />
+        <Route path="development" element={<CoachDevelopment />} />
+        <Route path="sessions" element={<CoachSessions />} />
+      </Route>
+
+      {/* Pitching Coach Routes */}
+      <Route path="/pitching-coach" element={<PitchingCoachLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<PitchingCoachDashboard />} />
+        <Route path="staff" element={<PitchingCoachStaff />} />
+        <Route path="arsenal" element={<PitchingCoachArsenal />} />
+        <Route path="bullpen" element={<PitchingCoachBullpen />} />
+        <Route path="gameplan" element={<PitchingCoachGamePlan />} />
+        <Route path="development" element={<PitchingCoachDevelopment />} />
       </Route>
 
       {/* Agent Routes */}

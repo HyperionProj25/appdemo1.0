@@ -6,6 +6,7 @@ import {
   AnimatedRosterGrid,
   AnimatedReportDoc,
   AnimatedPlayerCard,
+  AnimatedPitchingStaff,
   FloatingAIPanel,
 } from './AnimatedMockups'
 
@@ -18,7 +19,7 @@ export default function ProductPage() {
         <div className="ws-grid-bg" />
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div className="ws-hero-label">The Platform</div>
-          <h1>One Platform.<br />Three Professional Workflows.</h1>
+          <h1>One Platform.<br />Five Professional Workflows.</h1>
           <p>Complete coverage of the player development pipeline — from raw biomechanical data to role-specific intelligence that drives decisions.</p>
         </div>
       </section>
@@ -83,8 +84,38 @@ export default function ProductPage() {
         </div>
       </section>
 
-      {/* ===== AGENT WORKFLOW ===== */}
+      {/* ===== PITCHING COACH WORKFLOW ===== */}
       <section className="ws-section ws-section--alt">
+        <div className="ws-container">
+          <FadeSection>
+            <div className="ws-split-section">
+              <div className="ws-feature-text">
+                <div className="ws-section-label">Pitching Coach Workflow</div>
+                <h3>Pitcher Development</h3>
+                <div className="ws-feature-sub">Build Arms. Manage Workloads. Win Games.</div>
+                <p>
+                  Develop pitchers with data you can trust. Manage bullpen workloads, design pitch
+                  arsenals, and create game plans backed by opponent data — all from one platform
+                  built for the pitching side of the game.
+                </p>
+                <ul className="ws-feature-list">
+                  <li>Staff performance overview</li>
+                  <li>Arsenal development tools</li>
+                  <li>Bullpen workload management (ACWR)</li>
+                  <li>Game plan creation with opponent data</li>
+                  <li>Automated velocity and spin tracking</li>
+                </ul>
+              </div>
+              <div className="ws-split-visual">
+                <AnimatedPitchingStaff />
+              </div>
+            </div>
+          </FadeSection>
+        </div>
+      </section>
+
+      {/* ===== AGENT WORKFLOW ===== */}
+      <section className="ws-section">
         <div className="ws-container">
           <FadeSection>
             <div className="ws-split-section">
@@ -114,7 +145,7 @@ export default function ProductPage() {
       </section>
 
       {/* ===== PLAYER EXPERIENCE ===== */}
-      <section className="ws-section">
+      <section className="ws-section ws-section--alt">
         <div className="ws-container">
           <FadeSection>
             <div className="ws-split-section">
@@ -144,7 +175,7 @@ export default function ProductPage() {
       </section>
 
       {/* ===== AI INTELLIGENCE ===== */}
-      <section className="ws-section ws-section--alt" style={{ position: 'relative', overflow: 'hidden' }}>
+      <section className="ws-section" style={{ position: 'relative', overflow: 'hidden' }}>
         <FloatingOrbs />
         <div className="ws-container" style={{ position: 'relative', zIndex: 1 }}>
           <FadeSection>
@@ -175,7 +206,7 @@ export default function ProductPage() {
       </section>
 
       {/* ===== CAPABILITIES ===== */}
-      <section className="ws-section">
+      <section className="ws-section ws-section--alt">
         <div className="ws-container">
           <FadeSection>
             <div className="ws-text-center">
@@ -208,7 +239,7 @@ export default function ProductPage() {
       </section>
 
       {/* ===== INTEGRATIONS ===== */}
-      <section className="ws-section ws-section--alt">
+      <section className="ws-section">
         <div className="ws-container ws-text-center">
           <FadeSection>
             <div className="ws-section-label">Ecosystem</div>
