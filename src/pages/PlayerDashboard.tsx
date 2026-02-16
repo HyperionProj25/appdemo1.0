@@ -7,7 +7,7 @@ import PitchTooltip from '../components/PitchTooltip'
 import FilterLegend from '../components/FilterLegend'
 import { getPlayer, getPlayerName } from '../data/players'
 import { playerSuggestions, getPlayerAIResponse } from '../data/mockAI'
-import { getBatterStats, hittingBenchmarks, normalizeHitting, SPRAY_ZONES, getSprayZone } from '../data/csvStats'
+import { getBatterStats, hittingBenchmarks, normalizeHitting, SPRAY_ZONES, getSprayZone, pitchColors } from '../data/csvStats'
 import type { ScatterDot, ContactDot } from '../data/csvStats'
 
 const TC: Record<string, string> = {
@@ -27,6 +27,15 @@ const HIT_FILTER_ITEMS = [
 
 const ALL_ZONES = SPRAY_ZONES.map(z => z.key)
 
+const LIVE_PITCH_TYPES = ['FB', 'CB', 'CH', 'SL', 'CT']
+const LIVE_PITCH_FILTER_ITEMS = LIVE_PITCH_TYPES.map(k => ({ key: k, label: k, color: pitchColors[k] }))
+const VELO_RANGES = [
+  { key: '<85', label: '<85', min: 0, max: 84.9 },
+  { key: '85-90', label: '85-90', min: 85, max: 90 },
+  { key: '90-95', label: '90-95', min: 90, max: 95 },
+  { key: '95+', label: '95+', min: 95, max: 999 },
+]
+
 interface DotId { plot: 'sa' | 'cp'; idx: number }
 
 export default function PlayerDashboard() {
@@ -40,6 +49,9 @@ export default function PlayerDashboard() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [activeHitTypes, setActiveHitTypes] = useState<Set<string>>(() => new Set(HIT_TYPES))
   const [activeZones, setActiveZones] = useState<Set<string>>(() => new Set(ALL_ZONES))
+  const [zoneFilter, setZoneFilter] = useState<'all' | 'in' | 'out'>('all')
+  const [activePitchTypes, setActivePitchTypes] = useState<Set<string>>(() => new Set(LIVE_PITCH_TYPES))
+  const [activeVeloRanges, setActiveVeloRanges] = useState<Set<string>>(() => new Set(VELO_RANGES.map(v => v.key)))
 
   // Hover / select state
   const [hoveredDot, setHoveredDot] = useState<DotId | null>(null)
@@ -57,9 +69,38 @@ export default function PlayerDashboard() {
   const allCdots = mode === 'training' ? stats.trainingContact : stats.liveContact
   const allZonesActive = activeZones.size === ALL_ZONES.length
 
-  // Cross-filter: hit type + spray zone
-  const dots = allDots.filter(d => activeHitTypes.has(d.type) && (allZonesActive || activeZones.has(getSprayZone(d.dir))))
-  const cdots = allCdots.filter(d => activeHitTypes.has(d.type) && (allZonesActive || activeZones.has(getSprayZone(d.dir))))
+  // In zone / out of zone percentages
+  const inZoneCount = allDots.filter(d => d.inZone).length
+  const inZonePct = allDots.length ? +(inZoneCount / allDots.length * 100).toFixed(1) : 0
+  const outZonePct = allDots.length ? +((allDots.length - inZoneCount) / allDots.length * 100).toFixed(1) : 0
+
+  // Live mode filter helper
+  const passesLiveFilters = (d: ScatterDot | ContactDot) => {
+    if (mode !== 'live') return true
+    if (d.pitchType && !activePitchTypes.has(d.pitchType)) return false
+    if (d.pitchVelo !== undefined) {
+      const allVeloActive = activeVeloRanges.size === VELO_RANGES.length
+      if (!allVeloActive) {
+        const matchesVelo = VELO_RANGES.some(vr => activeVeloRanges.has(vr.key) && d.pitchVelo! >= vr.min && d.pitchVelo! <= vr.max)
+        if (!matchesVelo) return false
+      }
+    }
+    return true
+  }
+
+  // Cross-filter: hit type + spray zone + zone filter + live filters
+  const dots = allDots.filter(d =>
+    activeHitTypes.has(d.type) &&
+    (allZonesActive || activeZones.has(getSprayZone(d.dir))) &&
+    (zoneFilter === 'all' || (zoneFilter === 'in' ? d.inZone : !d.inZone)) &&
+    passesLiveFilters(d)
+  )
+  const cdots = allCdots.filter(d =>
+    activeHitTypes.has(d.type) &&
+    (allZonesActive || activeZones.has(getSprayZone(d.dir))) &&
+    (zoneFilter === 'all' || (zoneFilter === 'in' ? d.inZone : !d.inZone)) &&
+    passesLiveFilters(d)
+  )
 
   // Compute average contact zone for filtered dots (for the highlight box)
   const avgContactZone = useMemo(() => {
@@ -91,6 +132,9 @@ export default function PlayerDashboard() {
     setHoveredDot(null)
     setSelectedDot(null)
     setTooltipPos(null)
+    setZoneFilter('all')
+    setActivePitchTypes(new Set(LIVE_PITCH_TYPES))
+    setActiveVeloRanges(new Set(VELO_RANGES.map(v => v.key)))
     let i = 0
     const interval = setInterval(() => {
       i++
@@ -138,6 +182,33 @@ export default function PlayerDashboard() {
 
   const handleZoneReset = useCallback(() => {
     setActiveZones(new Set(ALL_ZONES))
+    setSelectedDot(null); setHoveredDot(null); setTooltipPos(null)
+  }, [])
+
+  // Live pitch type filter handlers
+  const handlePitchTypeToggle = useCallback((key: string) => {
+    setActivePitchTypes(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) { next.delete(key) } else { next.add(key) }
+      if (next.size === 0) return prev
+      return next
+    })
+    setSelectedDot(null); setHoveredDot(null); setTooltipPos(null)
+  }, [])
+
+  const handlePitchTypeReset = useCallback(() => {
+    setActivePitchTypes(new Set(LIVE_PITCH_TYPES))
+    setSelectedDot(null); setHoveredDot(null); setTooltipPos(null)
+  }, [])
+
+  // Velocity range toggle
+  const handleVeloToggle = useCallback((key: string) => {
+    setActiveVeloRanges(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) { next.delete(key) } else { next.add(key) }
+      if (next.size === 0) return prev
+      return next
+    })
     setSelectedDot(null); setHoveredDot(null); setTooltipPos(null)
   }, [])
 
@@ -211,18 +282,32 @@ export default function PlayerDashboard() {
     return `${vert} / ${horiz}`
   }
 
-  const saTooltipFields = (d: ScatterDot) => [
-    { label: 'EV', value: `${d.ev} mph` },
-    { label: 'LA', value: `${d.la}°` },
-    { label: 'Type', value: d.type },
-    { label: 'Dir', value: `${dirLabel(d.dir)} (${getSprayZone(d.dir)})` },
-  ]
+  const saTooltipFields = (d: ScatterDot) => {
+    const fields: { label: string; value: string | number }[] = [
+      { label: 'EV', value: `${d.ev} mph` },
+      { label: 'LA', value: `${d.la}°` },
+      { label: 'Type', value: d.type },
+      { label: 'Dir', value: `${dirLabel(d.dir)} (${getSprayZone(d.dir)})` },
+    ]
+    if (mode === 'live' && d.pitchType) {
+      fields.push({ label: 'Pitch', value: d.pitchType })
+      if (d.pitchVelo) fields.push({ label: 'Velo', value: `${d.pitchVelo} mph` })
+    }
+    return fields
+  }
 
-  const cpTooltipFields = (d: ContactDot) => [
-    { label: 'Type', value: d.type },
-    { label: 'Position', value: contactPosDesc(d) },
-    { label: 'Dir', value: getSprayZone(d.dir) },
-  ]
+  const cpTooltipFields = (d: ContactDot) => {
+    const fields: { label: string; value: string | number }[] = [
+      { label: 'Type', value: d.type },
+      { label: 'Position', value: contactPosDesc(d) },
+      { label: 'Dir', value: getSprayZone(d.dir) },
+    ]
+    if (mode === 'live' && d.pitchType) {
+      fields.push({ label: 'Pitch', value: d.pitchType })
+      if (d.pitchVelo) fields.push({ label: 'Velo', value: `${d.pitchVelo} mph` })
+    }
+    return fields
+  }
 
   // Active tooltip
   const activeDotId = selectedDot || hoveredDot
@@ -370,6 +455,53 @@ export default function PlayerDashboard() {
             {/* Session Analysis */}
             <div className="anim-slide-up anim-delay-5" ref={saRef} style={{ flex: 0.85, background: 'var(--card-bg)', border: '1px solid var(--orange-border)', borderRadius: 6, padding: '14px 16px', display: 'flex', flexDirection: 'column', minHeight: 0, position: 'relative' }} onClick={handleBgClick}>
               <div style={secHead2}>SESSION ANALYSIS</div>
+              {/* In Zone / Out of Zone toggle + live mode filters */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 6, flexShrink: 0 }}>
+                <button
+                  onClick={() => setZoneFilter(zoneFilter === 'in' ? 'all' : 'in')}
+                  style={{
+                    padding: '4px 10px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                    letterSpacing: '0.8px', borderRadius: 4, cursor: 'pointer', transition: 'all 0.15s',
+                    background: zoneFilter === 'in' ? 'rgba(76,175,80,0.15)' : 'var(--panel)',
+                    border: `1px solid ${zoneFilter === 'in' ? '#4caf50' : 'var(--card-border)'}`,
+                    color: zoneFilter === 'in' ? '#4caf50' : 'var(--muted)',
+                  }}
+                >IN ZONE {inZonePct}%</button>
+                <button
+                  onClick={() => setZoneFilter(zoneFilter === 'out' ? 'all' : 'out')}
+                  style={{
+                    padding: '4px 10px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                    letterSpacing: '0.8px', borderRadius: 4, cursor: 'pointer', transition: 'all 0.15s',
+                    background: zoneFilter === 'out' ? 'rgba(244,67,54,0.15)' : 'var(--panel)',
+                    border: `1px solid ${zoneFilter === 'out' ? '#f44336' : 'var(--card-border)'}`,
+                    color: zoneFilter === 'out' ? '#f44336' : 'var(--muted)',
+                  }}
+                >OUT OF ZONE {outZonePct}%</button>
+                {mode === 'live' && (
+                  <>
+                    <div style={{ width: 1, height: 18, background: 'var(--card-border)', margin: '0 4px' }} />
+                    <FilterLegend items={LIVE_PITCH_FILTER_ITEMS} active={activePitchTypes} onToggle={handlePitchTypeToggle} onReset={handlePitchTypeReset} />
+                    <div style={{ width: 1, height: 18, background: 'var(--card-border)', margin: '0 4px' }} />
+                    {VELO_RANGES.map(vr => {
+                      const isActive = activeVeloRanges.has(vr.key)
+                      return (
+                        <button
+                          key={vr.key}
+                          onClick={() => handleVeloToggle(vr.key)}
+                          style={{
+                            padding: '4px 8px', fontSize: 10, fontWeight: 700,
+                            letterSpacing: '0.5px', borderRadius: 4, cursor: 'pointer', transition: 'all 0.15s',
+                            background: isActive ? 'rgba(224,172,68,0.12)' : 'transparent',
+                            border: `1px solid ${isActive ? 'var(--accent)' : 'rgba(60,60,60,0.3)'}`,
+                            color: isActive ? 'var(--accent)' : 'var(--muted)',
+                            opacity: isActive ? 1 : 0.5,
+                          }}
+                        >{vr.label}</button>
+                      )
+                    })}
+                  </>
+                )}
+              </div>
               <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg viewBox="0 0 100 90" preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: '100%' }}>
                   <rect x="10" y="5" width="80" height="72" fill="none" stroke="rgba(80,80,80,0.25)" strokeWidth="0.6" />

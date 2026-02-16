@@ -15,6 +15,9 @@ export interface ScatterDot {
   la: number  // actual launch angle degrees
   type: 'popup' | 'linedrive' | 'flyball' | 'groundball'
   dir: number // spray direction degrees
+  inZone: boolean // pitch was inside strike zone
+  pitchType?: string  // pitch type abbr (FB/CB/CH/SL/CT) — live mode only
+  pitchVelo?: number  // pitch velocity mph — live mode only
 }
 
 export interface ContactDot {
@@ -22,6 +25,9 @@ export interface ContactDot {
   y: number
   type: 'popup' | 'linedrive' | 'flyball' | 'groundball'
   dir: number // spray direction degrees (-45 to 45)
+  inZone: boolean // pitch was inside strike zone
+  pitchType?: string  // pitch type abbr — live mode only
+  pitchVelo?: number  // pitch velocity mph — live mode only
 }
 
 export interface SprayZone {
@@ -104,6 +110,8 @@ export interface PitcherStats {
   maxFB: number
   avgBS: number
   pitches: number
+  trainingStrikePct: number
+  liveStrikePct: number
   trainingPitchTypes: PitchTypeStats[]
   livePitchTypes: PitchTypeStats[]
   trainingDots: PitchDot[]
@@ -141,6 +149,8 @@ interface Swing {
   plateLocH: number  // feet, 0.5 to 4.5 (PlateLocHeight)
   contactX: number   // feet, -1.5 to 1.5 (ContactPositionX — horizontal)
   contactY: number   // feet, 1.5 to 3.5 (ContactPositionY — depth in front of plate)
+  pitchType?: string  // assigned for live swings
+  pitchVelo?: number  // assigned for live swings
 }
 
 function generateSwings(seed: number, count: number, avgEV: number, maxEV: number): Swing[] {
@@ -190,6 +200,8 @@ function swingsToScatter(swings: Swing[]): ScatterDot[] {
     // Map PlateLocHeight to SVG y: 0ft → y=77, 4.5ft → y=5 (inverted)
     y: +(Math.max(7, Math.min(80, 77 - (s.plateLocH / 4.5) * 72))).toFixed(1),
     ev: s.ev, la: s.la, type: s.type, dir: s.dir,
+    inZone: Math.abs(s.plateLocS) <= 0.83 && s.plateLocH >= 1.5 && s.plateLocH <= 3.5,
+    ...(s.pitchType ? { pitchType: s.pitchType, pitchVelo: s.pitchVelo } : {}),
   }))
 }
 
@@ -200,6 +212,8 @@ function swingsToContact(swings: Swing[]): ContactDot[] {
     // Map ContactPositionY (depth) to SVG y: 3.5ft → y=10, 1.5ft → y=75 (inverted)
     y: +(Math.max(10, Math.min(75, 75 - ((s.contactY - 1.5) / 2.0) * 65))).toFixed(1),
     type: s.type, dir: s.dir,
+    inZone: Math.abs(s.plateLocS) <= 0.83 && s.plateLocH >= 1.5 && s.plateLocH <= 3.5,
+    ...(s.pitchType ? { pitchType: s.pitchType, pitchVelo: s.pitchVelo } : {}),
   }))
 }
 
@@ -242,6 +256,38 @@ function pctFromDots(dots: ScatterDot[]): { popup: number; linedrive: number; fl
   }
 }
 
+// ── Strike % computation ────────────────────────────────────────────────────
+
+function computeStrikePct(pitches: UnifiedPitch[]): number {
+  if (pitches.length === 0) return 0
+  const strikes = pitches.filter(p => Math.abs(p.plateLocS) <= 0.83 && p.plateLocH >= 1.5 && p.plateLocH <= 3.5)
+  return +(strikes.length / pitches.length * 100).toFixed(1)
+}
+
+// ── Assign pitch type/velo to live hitting swings ───────────────────────────
+
+function assignPitchData(swings: Swing[], seed: number): void {
+  const r = seeded(seed)
+  const types = [
+    { abbr: 'FB', weight: 0.55, veloMin: 88, veloMax: 96 },
+    { abbr: 'CB', weight: 0.15, veloMin: 72, veloMax: 82 },
+    { abbr: 'CH', weight: 0.12, veloMin: 78, veloMax: 86 },
+    { abbr: 'SL', weight: 0.12, veloMin: 80, veloMax: 88 },
+    { abbr: 'CT', weight: 0.06, veloMin: 84, veloMax: 92 },
+  ]
+  const cumWeights: number[] = []
+  let total = 0
+  for (const t of types) { total += t.weight; cumWeights.push(total) }
+
+  for (const s of swings) {
+    const roll = r()
+    const idx = cumWeights.findIndex(w => roll <= w)
+    const pt = types[idx >= 0 ? idx : 0]
+    s.pitchType = pt.abbr
+    s.pitchVelo = +(pt.veloMin + r() * (pt.veloMax - pt.veloMin)).toFixed(1)
+  }
+}
+
 // ── Generate batter data ────────────────────────────────────────────────────
 
 function makeBatter(
@@ -251,6 +297,8 @@ function makeBatter(
   // Unified swing data — each swing produces both scatter + contact dots with matching type/dir
   const tSwings = generateSwings(seed, swings, avgEV, maxEV)
   const lSwings = generateSwings(seed + 500, Math.max(14, swings - 6), avgEV + 2, maxEV + 3)
+  // Assign pitch type/velo only to live swings (training swings come from tee/BP — no opposing pitcher)
+  assignPitchData(lSwings, seed + 700)
   const tDots = swingsToScatter(tSwings)
   const lDots = swingsToScatter(lSwings)
   const tCon = swingsToContact(tSwings)
@@ -448,6 +496,10 @@ function makePitcher(
   const rLive = seeded(seed + 600)
   const livePitches = generateUnifiedPitches(rLive, Math.max(20, pitches + 12), livePitchTypes, baseRelX, baseRelY)
 
+  // Strike % computed from unified pitch location data
+  const trainingStrikePct = computeStrikePct(trainingPitches)
+  const liveStrikePct = computeStrikePct(livePitches)
+
   // Derive all chart dot arrays from the same unified pitch data
   const trainingDots = pitchesToStrikeZone(trainingPitches)
   const liveDots = pitchesToStrikeZone(livePitches)
@@ -463,6 +515,7 @@ function makePitcher(
 
   return {
     id, name, avgFB, maxFB, avgBS, pitches,
+    trainingStrikePct, liveStrikePct,
     trainingPitchTypes, livePitchTypes,
     trainingDots, liveDots,
     trainingMovementDots, liveMovementDots,

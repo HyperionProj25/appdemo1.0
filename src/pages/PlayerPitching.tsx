@@ -61,6 +61,7 @@ export default function PlayerPitching() {
 
   const fbType = pitchTypes.find(pt => pt.abbr === 'FB')
   const avgSpin = fbType ? fbType.spin : 2400
+  const strikePct = mode === 'training' ? pitcher.trainingStrikePct : pitcher.liveStrikePct
   const weakContact = 32
   const radarValues = normalizePitching(pitcher.avgFB + fbOffset, avgSpin, weakContact)
 
@@ -249,7 +250,7 @@ export default function PlayerPitching() {
                 {[
                   { label: 'AVG FB', val: `${pitcher.avgFB + fbOffset}`, unit: 'MPH', highlight: false },
                   { label: 'MAX FB', val: `${pitcher.maxFB + fbOffset}`, unit: 'MPH', highlight: true },
-                  { label: 'AVG BS', val: `${pitcher.avgBS}`, unit: 'MPH', highlight: false },
+                  { label: 'STRIKE %', val: `${strikePct}`, unit: '%', highlight: false },
                   { label: 'PITCHES', val: `${pitcher.pitches + pitchCountOffset}`, unit: '', highlight: false },
                 ].map((s, i) => (
                   <div key={i} style={{ textAlign: 'center' }}>
@@ -437,6 +438,58 @@ export default function PlayerPitching() {
               )}
             </div>
           </div>
+
+          {/* Batted Ball Outcomes */}
+          {filteredPitchTypes.length > 0 && (
+            <div className="anim-slide-up anim-delay-7" style={{ background: 'var(--card-bg)', border: '1px solid var(--orange-border)', borderRadius: 8, padding: '16px 22px', boxShadow: 'inset 0 0 20px rgba(224,172,68,0.04)', flexShrink: 0 }}>
+              <div style={secHead2}>BATTED BALL OUTCOMES</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {filteredPitchTypes.map(pt => {
+                  const gb = parseInt(pt.outcomes.GB) || 0
+                  const ld = parseInt(pt.outcomes.LD) || 0
+                  const fb = parseInt(pt.outcomes.FB) || 0
+                  const pu = parseInt(pt.outcomes.PU) || 0
+                  const total = gb + ld + fb + pu || 1
+                  const segments = [
+                    { key: 'GB', pct: gb / total * 100, raw: gb, color: '#fbc02d' },
+                    { key: 'LD', pct: ld / total * 100, raw: ld, color: '#4caf50' },
+                    { key: 'FB', pct: fb / total * 100, raw: fb, color: '#e53935' },
+                    { key: 'PU', pct: pu / total * 100, raw: pu, color: '#4a90d9' },
+                  ]
+                  return (
+                    <div key={pt.abbr} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 28, fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 13, color: pitchColors[pt.abbr], flexShrink: 0 }}>{pt.abbr}</div>
+                      <div style={{ flex: 1, display: 'flex', height: 22, borderRadius: 4, overflow: 'hidden', background: '#1a1a1a' }}>
+                        {segments.map(seg => (
+                          <div key={seg.key} style={{ width: `${seg.pct}%`, background: seg.color, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'width 0.3s' }}>
+                            {seg.pct > 8 && <span style={{ fontSize: 9, fontWeight: 700, color: '#000', letterSpacing: '0.5px' }}>{seg.key}</span>}
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ width: 120, display: 'flex', gap: 6, flexShrink: 0 }}>
+                        {segments.map(seg => (
+                          <span key={seg.key} style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--muted)', width: 28, textAlign: 'right' }}>{seg.raw}%</span>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 10, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                {[
+                  { key: 'GB', label: 'Ground Ball', color: '#fbc02d' },
+                  { key: 'LD', label: 'Line Drive', color: '#4caf50' },
+                  { key: 'FB', label: 'Fly Ball', color: '#e53935' },
+                  { key: 'PU', label: 'Pop Up', color: '#4a90d9' },
+                ].map(item => (
+                  <span key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: 'var(--muted)', letterSpacing: '0.5px' }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: item.color, display: 'inline-block' }} />
+                    {item.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Footer */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '8px 0', flexShrink: 0 }}>
