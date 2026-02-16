@@ -1,5 +1,7 @@
+import { useNavigate } from 'react-router-dom'
 import Sparkline from '../../components/Sparkline'
 import { pitchingStaff, getStarters, pitchColors } from '../../data/pitchingStaff'
+import { staffToPlayerMap } from '../../data/csvStats'
 
 const generateTrend = (base: number, variance: number): number[] => {
   const result: number[] = []
@@ -23,6 +25,7 @@ const recentAppearances = [
 ]
 
 export default function PitchingCoachDashboard() {
+  const navigate = useNavigate()
   const staff = pitchingStaff
   const starters = getStarters()
   const staffERA = (staff.reduce((s, p) => s + p.era, 0) / staff.length).toFixed(2)
@@ -84,7 +87,7 @@ export default function PitchingCoachDashboard() {
           {nextStarter && (
             <div style={{ marginBottom: 24 }}>
               <div style={secTitle}>Next Starter</div>
-              <div style={{ ...cardStyle, background: 'var(--accent-bg-subtle)', border: '1px solid var(--accent)' }}>
+              <div style={{ ...cardStyle, background: 'var(--accent-bg-subtle)', border: '1px solid var(--accent)', cursor: 'pointer' }} onClick={() => { const pid = staffToPlayerMap[nextStarter.id]; if (pid) navigate(`/player/${pid}/pitching`) }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                   <div>
                     <div style={{ fontFamily: 'var(--font-heading)', fontSize: 22, fontWeight: 700, color: 'var(--text-bright)', marginBottom: 4 }}>
@@ -187,7 +190,8 @@ export default function PitchingCoachDashboard() {
               </thead>
               <tbody>
                 {recentAppearances.map((app, i) => (
-                  <tr key={i} style={{ borderBottom: i < recentAppearances.length - 1 ? '1px solid var(--surface-tint-2)' : 'none', transition: 'background 0.15s' }}
+                  <tr key={i} style={{ borderBottom: i < recentAppearances.length - 1 ? '1px solid var(--surface-tint-2)' : 'none', transition: 'background 0.15s', cursor: 'pointer' }}
+                    onClick={() => { const pid = staffToPlayerMap[app.pitcher]; if (pid) navigate(`/player/${pid}/pitching`) }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--row-hover)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >

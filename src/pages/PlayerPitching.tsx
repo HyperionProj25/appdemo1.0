@@ -1,27 +1,40 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Sidebar from '../components/Sidebar'
 import AIPanel from '../components/AIPanel'
 import RadarChart from '../components/RadarChart'
 import DonutGauge from '../components/DonutGauge'
+import PitchTooltip from '../components/PitchTooltip'
+import FilterLegend from '../components/FilterLegend'
 import { getPlayer, getPlayerName } from '../data/players'
 import { playerSuggestions, getPlayerAIResponse } from '../data/mockAI'
 import { getPitcherForPlayer, pitchColors, pitchingBenchmarks, normalizePitching } from '../data/csvStats'
+import type { PitchDot, MovementDot, ReleaseDot } from '../data/csvStats'
 
-const PITCH_FILTERS = ['ALL', 'FB', 'CB', 'CH', 'SL', 'CT'] as const
-type PitchFilter = typeof PITCH_FILTERS[number]
+const PITCH_TYPES = ['FB', 'CB', 'CH', 'SL', 'CT']
+const PITCH_FILTER_ITEMS = PITCH_TYPES.map(k => ({ key: k, label: k, color: pitchColors[k] }))
+
+interface DotId { plot: 'sz' | 'mv' | 'rp'; idx: number }
 
 export default function PlayerPitching() {
   const { playerId } = useParams()
   const navigate = useNavigate()
   const player = getPlayer(playerId || '3000002')
   const [mode, setMode] = useState<'training' | 'live'>('training')
-  const [bottomTab, setBottomTab] = useState<'usage' | 'avgmetrics'>('usage')
   const [showAI, setShowAI] = useState(false)
-  const [pitchFilter, setPitchFilter] = useState<PitchFilter>('ALL')
+  const [activeTypes, setActiveTypes] = useState<Set<string>>(() => new Set(PITCH_TYPES))
   const [dotCount, setDotCount] = useState(0)
   const [fadeKey, setFadeKey] = useState(0)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  // Hover / select state
+  const [hoveredDot, setHoveredDot] = useState<DotId | null>(null)
+  const [selectedDot, setSelectedDot] = useState<DotId | null>(null)
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null)
+
+  const szRef = useRef<HTMLDivElement>(null)
+  const mvRef = useRef<HTMLDivElement>(null)
+  const rpRef = useRef<HTMLDivElement>(null)
 
   const pitcher = getPitcherForPlayer(playerId || '3000002')
 
@@ -30,24 +43,34 @@ export default function PlayerPitching() {
 
   const pitchTypes = mode === 'training' ? pitcher.trainingPitchTypes : pitcher.livePitchTypes
   const allDots = mode === 'training' ? pitcher.trainingDots : pitcher.liveDots
-  const filteredDots = pitchFilter === 'ALL' ? allDots : allDots.filter(d => d.type === pitchFilter)
-  const filteredMovement = pitchFilter === 'ALL' ? pitcher.movementDots : pitcher.movementDots.filter(d => d.type === pitchFilter)
-  const filteredPitchTypes = pitchFilter === 'ALL' ? pitchTypes : pitchTypes.filter(pt => pt.abbr === pitchFilter)
+  const allMovement = mode === 'training' ? pitcher.trainingMovementDots : pitcher.liveMovementDots
+  const allRelease = mode === 'training' ? pitcher.trainingReleaseDots : pitcher.liveReleaseDots
+
+  // Build index map: for each dot in allDots, track its original index so cross-plot works
+  // After filtering, filteredDots[i] came from allDots[szOrigIdx[i]]
+  const szOrigIdx: number[] = []
+  const filteredDots = allDots.filter((d, i) => { if (activeTypes.has(d.type)) { szOrigIdx.push(i); return true } return false })
+  const mvOrigIdx: number[] = []
+  const filteredMovement = allMovement.filter((d, i) => { if (activeTypes.has(d.type)) { mvOrigIdx.push(i); return true } return false })
+  const rpOrigIdx: number[] = []
+  const filteredRelease = allRelease.filter((d, i) => { if (activeTypes.has(d.type)) { rpOrigIdx.push(i); return true } return false })
+  const filteredPitchTypes = pitchTypes.filter(pt => activeTypes.has(pt.abbr))
 
   const fbOffset = mode === 'live' ? 2 : 0
   const pitchCountOffset = mode === 'live' ? 18 : 0
 
-  // Avg spin for radar (from FB type)
   const fbType = pitchTypes.find(pt => pt.abbr === 'FB')
   const avgSpin = fbType ? fbType.spin : 2400
-  const weakContact = 32 // placeholder
-
+  const weakContact = 32
   const radarValues = normalizePitching(pitcher.avgFB + fbOffset, avgSpin, weakContact)
 
-  // Stagger dots
+  // Stagger dots + clear selection on mode change
   useEffect(() => {
     setDotCount(0)
     setFadeKey(k => k + 1)
+    setHoveredDot(null)
+    setSelectedDot(null)
+    setTooltipPos(null)
     let i = 0
     const interval = setInterval(() => {
       i++
@@ -55,7 +78,144 @@ export default function PlayerPitching() {
       if (i >= filteredDots.length) clearInterval(interval)
     }, 40)
     return () => clearInterval(interval)
-  }, [mode, pitchFilter, filteredDots.length])
+  }, [mode, filteredDots.length])
+
+  // Filter toggle
+  const handleToggle = useCallback((key: string) => {
+    setActiveTypes(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) { next.delete(key) } else { next.add(key) }
+      if (next.size === 0) return prev // don't allow empty
+      return next
+    })
+    setSelectedDot(null)
+    setHoveredDot(null)
+    setTooltipPos(null)
+  }, [])
+
+  const handleReset = useCallback(() => {
+    setActiveTypes(new Set(PITCH_TYPES))
+    setSelectedDot(null)
+    setHoveredDot(null)
+    setTooltipPos(null)
+  }, [])
+
+  // Helpers for dot events
+  const getMousePos = (e: React.MouseEvent, container: HTMLDivElement | null): { x: number; y: number } => {
+    if (!container) return { x: 0, y: 0 }
+    const rect = container.getBoundingClientRect()
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top }
+  }
+
+  const handleDotEnter = (plot: DotId['plot'], idx: number, e: React.MouseEvent, container: HTMLDivElement | null) => {
+    setHoveredDot({ plot, idx })
+    setTooltipPos(getMousePos(e, container))
+  }
+
+  const handleDotLeave = () => {
+    setHoveredDot(null)
+    if (!selectedDot) setTooltipPos(null)
+  }
+
+  const handleDotClick = (plot: DotId['plot'], idx: number, e: React.MouseEvent, container: HTMLDivElement | null) => {
+    e.stopPropagation()
+    if (selectedDot?.plot === plot && selectedDot?.idx === idx) {
+      setSelectedDot(null)
+      setTooltipPos(null)
+    } else {
+      setSelectedDot({ plot, idx })
+      setTooltipPos(getMousePos(e, container))
+    }
+  }
+
+  const handleBgClick = () => {
+    setSelectedDot(null)
+    setTooltipPos(null)
+  }
+
+  // Resolve a DotId to its original (unfiltered) index in allDots
+  const toOrigIdx = (dotId: DotId): number => {
+    if (dotId.plot === 'sz') return szOrigIdx[dotId.idx] ?? -1
+    if (dotId.plot === 'mv') return mvOrigIdx[dotId.idx] ?? -1
+    return rpOrigIdx[dotId.idx] ?? -1
+  }
+
+  // Dot visual state helpers — cross-plot: same original pitch index highlights on all charts
+  const dotState = (plot: DotId['plot'], idx: number) => {
+    const origMap = plot === 'sz' ? szOrigIdx : plot === 'mv' ? mvOrigIdx : rpOrigIdx
+    const myOrigIdx = origMap[idx] ?? -1
+
+    const isHovered = hoveredDot?.plot === plot && hoveredDot?.idx === idx
+    const isCrossHover = hoveredDot !== null && !isHovered && toOrigIdx(hoveredDot) === myOrigIdx
+    const isSelected = selectedDot !== null && toOrigIdx(selectedDot) === myOrigIdx
+    const hasSelection = selectedDot !== null
+    return { isHovered: isHovered || isCrossHover, isSelected, hasSelection }
+  }
+
+  const dotRadius = (base: number, isHovered: boolean, isSelected: boolean) => {
+    if (isHovered) return base * 1.8
+    if (isSelected) return base * 1.5
+    return base
+  }
+
+  const dotOpacity = (isHovered: boolean, isSelected: boolean, hasSelection: boolean) => {
+    if (isHovered || isSelected) return 1.0
+    if (hasSelection) return 0.3
+    return 0.85
+  }
+
+  const dotStroke = (isHovered: boolean, isSelected: boolean) => {
+    if (isSelected) return { stroke: '#fff', strokeWidth: 0.6 }
+    if (isHovered) return { stroke: '#fff', strokeWidth: 0.4 }
+    return {}
+  }
+
+  // Tooltip fields
+  const szTooltipFields = (d: PitchDot) => [
+    { label: 'Pitch', value: d.type },
+    { label: 'Velo', value: `${d.velo} mph` },
+    { label: 'Spin', value: `${Math.round(d.spin)} rpm` },
+    { label: 'V Break', value: `${d.vBreak} in` },
+    { label: 'H Break', value: `${d.hBreak} in` },
+  ]
+
+  const mvTooltipFields = (d: MovementDot) => [
+    { label: 'Pitch', value: d.type },
+    { label: 'HB', value: `${d.x} in` },
+    { label: 'IVB', value: `${d.y} in` },
+    { label: 'Velo', value: `${d.velo} mph` },
+  ]
+
+  const rpTooltipFields = (d: ReleaseDot) => [
+    { label: 'Pitch', value: d.type },
+    { label: 'Velo', value: `${d.velo} mph` },
+    { label: 'Height', value: `${d.cy} ft` },
+    { label: 'Offset', value: `${d.cx} ft` },
+  ]
+
+  // Active tooltip data
+  const activeDotId = selectedDot || hoveredDot
+  let tooltipFields: { label: string; value: string | number }[] | null = null
+  let tooltipColor: string | undefined
+  let tooltipContainerW = 0, tooltipContainerH = 0
+
+  if (activeDotId && tooltipPos) {
+    const ref = activeDotId.plot === 'sz' ? szRef : activeDotId.plot === 'mv' ? mvRef : rpRef
+    if (ref.current) {
+      tooltipContainerW = ref.current.offsetWidth
+      tooltipContainerH = ref.current.offsetHeight
+    }
+    if (activeDotId.plot === 'sz') {
+      const d = filteredDots[activeDotId.idx]
+      if (d) { tooltipFields = szTooltipFields(d); tooltipColor = pitchColors[d.type] }
+    } else if (activeDotId.plot === 'mv') {
+      const d = filteredMovement[activeDotId.idx]
+      if (d) { tooltipFields = mvTooltipFields(d); tooltipColor = pitchColors[d.type] }
+    } else {
+      const d = filteredRelease[activeDotId.idx]
+      if (d) { tooltipFields = rpTooltipFields(d); tooltipColor = pitchColors[d.type] }
+    }
+  }
 
   return (
     <div style={{ display: 'flex', height: '100%', width: '100%', overflow: 'hidden' }}>
@@ -71,28 +231,7 @@ export default function PlayerPitching() {
         {/* Controls */}
         <div className="anim-fade-in anim-delay-1" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, flexShrink: 0 }}>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            {/* Pitch type selector */}
-            <select
-              value={pitchFilter}
-              onChange={e => setPitchFilter(e.target.value as PitchFilter)}
-              style={{
-                padding: '10px 16px',
-                fontFamily: 'var(--font-heading)',
-                fontWeight: 700,
-                fontSize: 12,
-                textTransform: 'uppercase',
-                letterSpacing: '1.2px',
-                background: 'var(--panel)',
-                color: 'var(--text)',
-                border: '1px solid var(--card-border)',
-                borderRadius: 8,
-                cursor: 'pointer',
-              }}
-            >
-              {PITCH_FILTERS.map(f => (
-                <option key={f} value={f}>{f === 'ALL' ? 'ALL PITCHES' : f}</option>
-              ))}
-            </select>
+            <FilterLegend items={PITCH_FILTER_ITEMS} active={activeTypes} onToggle={handleToggle} onReset={handleReset} />
             <button className="btn" disabled title="Coming soon">DATE</button>
           </div>
           <div style={{ display: 'flex', border: '1px solid var(--orange-border)', borderRadius: 8, overflow: 'hidden' }}>
@@ -133,94 +272,169 @@ export default function PlayerPitching() {
             </div>
           </div>
 
-          {/* Bottom row: Pitch breakdown + Session Analysis + Movement/Release */}
+          {/* Bottom row: Pitch Usage | Strike Zone | Movement | Release */}
           <div key={fadeKey} className="tab-content-enter" style={{ display: 'flex', gap: 16, flex: 1, minHeight: 0 }}>
             {/* Pitch type usage with DonutGauge */}
-            <div className="anim-slide-up anim-delay-4" style={{ width: 280, minWidth: 280, background: 'var(--card-bg)', border: '1px solid var(--orange-border)', borderRadius: 8, padding: '16px', boxShadow: 'inset 0 0 20px rgba(224,172,68,0.04)', overflow: 'auto' }}>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                <button style={{ padding: '6px 14px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', background: 'var(--panel)', border: `1px solid ${bottomTab === 'usage' ? 'var(--accent)' : 'var(--card-border)'}`, borderRadius: 6, color: bottomTab === 'usage' ? 'var(--text)' : 'var(--muted)', cursor: 'pointer' }} onClick={() => setBottomTab('usage')}>{'\u25BC'} USAGE</button>
-                <button style={{ padding: '6px 14px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', background: 'var(--panel)', border: `1px solid ${bottomTab === 'avgmetrics' ? 'var(--accent)' : 'var(--card-border)'}`, borderRadius: 6, color: bottomTab === 'avgmetrics' ? 'var(--text)' : 'var(--muted)', cursor: 'pointer' }} onClick={() => setBottomTab('avgmetrics')}>AVG METRICS</button>
-              </div>
+            <div className="anim-slide-up anim-delay-4" style={{ width: 220, minWidth: 220, background: 'var(--card-bg)', border: '1px solid var(--orange-border)', borderRadius: 8, padding: '16px', boxShadow: 'inset 0 0 20px rgba(224,172,68,0.04)', overflow: 'auto' }}>
+              <div style={secHead2}>PITCH USAGE</div>
               {filteredPitchTypes.map((pt, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, padding: '7px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, width: 28, color: 'var(--text)', flexShrink: 0 }}>{pt.abbr}</div>
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <div style={{ fontWeight: 700, fontSize: 14, width: 26, color: 'var(--text)', flexShrink: 0 }}>{pt.abbr}</div>
                   <div style={{ flexShrink: 0 }}>
-                    <DonutGauge
-                      value={pt.usage}
-                      label={`${pt.usage}`}
-                      size={80}
-                      color={pt.color}
-                      strokeWidth={6}
-                    />
+                    <DonutGauge value={pt.usage} label={`${pt.usage}`} size={68} color={pt.color} strokeWidth={5} />
                   </div>
-                  <div style={{ color: 'var(--muted)', lineHeight: 1.6, fontSize: 11, fontFamily: 'var(--font-mono)' }}>
-                    <div>Velo: {pt.velo} MPH</div>
-                    <div>Vert Break: {pt.vBreak} in</div>
-                    <div>Horz Break: {pt.hBreak} in</div>
-                    <div>Spin: {pt.spin} RPM</div>
+                  <div style={{ color: 'var(--muted)', lineHeight: 1.5, fontSize: 10, fontFamily: 'var(--font-mono)' }}>
+                    <div>Velo: {pt.velo}</div>
+                    <div>VB: {pt.vBreak}</div>
+                    <div>HB: {pt.hBreak}</div>
+                    <div>Spin: {pt.spin}</div>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Session Analysis */}
-            <div className="anim-slide-up anim-delay-5" style={{ flex: 1, background: 'var(--card-bg)', border: '1px solid var(--orange-border)', borderRadius: 8, padding: '16px', boxShadow: 'inset 0 0 20px rgba(224,172,68,0.04)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            {/* Strike Zone / Session Analysis — zoomed so zone fills chart */}
+            <div className="anim-slide-up anim-delay-5" ref={szRef} style={{ flex: 1, background: 'var(--card-bg)', border: '1px solid var(--orange-border)', borderRadius: 8, padding: '16px', boxShadow: 'inset 0 0 20px rgba(224,172,68,0.04)', display: 'flex', flexDirection: 'column', minHeight: 0, position: 'relative' }} onClick={handleBgClick}>
               <div style={secHead2}>SESSION ANALYSIS</div>
               <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg viewBox="0 0 100 95" preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: '100%' }}>
-                  <rect x="15" y="5" width="70" height="80" fill="none" stroke="rgba(100,100,100,0.3)" strokeWidth="0.4" />
-                  <rect x="30" y="20" width="40" height="50" fill="none" stroke="rgba(150,150,150,0.3)" strokeWidth="0.4" />
-                  {filteredDots.slice(0, dotCount).map((d, i) => (
-                    <circle key={i} cx={d.x} cy={d.y} r="1.5" fill={pitchColors[d.type] || '#888'} opacity="0.9">
-                      <animate attributeName="r" from="0" to="1.5" dur="0.25s" fill="freeze" />
-                      <animate attributeName="opacity" from="0" to="0.9" dur="0.25s" fill="freeze" />
-                    </circle>
-                  ))}
+                <svg viewBox="22 8 56 62" preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: '100%' }}>
+                  {/* Strike zone rect */}
+                  <rect x="36" y="21" width="28" height="32" fill="none" stroke="rgba(150,150,150,0.35)" strokeWidth="0.5" />
+                  {/* 3x3 zone grid */}
+                  <line x1="36" y1="31.7" x2="64" y2="31.7" stroke="rgba(120,120,120,0.1)" strokeWidth="0.25" />
+                  <line x1="36" y1="42.3" x2="64" y2="42.3" stroke="rgba(120,120,120,0.1)" strokeWidth="0.25" />
+                  <line x1="45.3" y1="21" x2="45.3" y2="53" stroke="rgba(120,120,120,0.1)" strokeWidth="0.25" />
+                  <line x1="54.7" y1="21" x2="54.7" y2="53" stroke="rgba(120,120,120,0.1)" strokeWidth="0.25" />
+                  {filteredDots.slice(0, dotCount).map((d, i) => {
+                    const { isHovered, isSelected, hasSelection } = dotState('sz', i)
+                    const r = dotRadius(1.3, isHovered, isSelected)
+                    const op = dotOpacity(isHovered, isSelected, hasSelection)
+                    const st = dotStroke(isHovered, isSelected)
+                    return (
+                      <circle
+                        key={i} cx={d.x} cy={d.y} r={r}
+                        fill={pitchColors[d.type] || '#888'}
+                        opacity={op}
+                        style={{ cursor: 'pointer', transition: 'r 0.15s, opacity 0.15s' }}
+                        {...st}
+                        onMouseEnter={e => handleDotEnter('sz', i, e, szRef.current)}
+                        onMouseLeave={handleDotLeave}
+                        onClick={e => handleDotClick('sz', i, e, szRef.current)}
+                      />
+                    )
+                  })}
                 </svg>
               </div>
-              {/* Outcome percentages */}
-              {filteredPitchTypes.length > 0 && (
-                <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap', fontSize: 11, color: 'var(--muted)', paddingTop: 8, flexShrink: 0 }}>
-                  {filteredPitchTypes.map(pt => (
-                    <div key={pt.abbr} style={{ display: 'flex', gap: 10 }}>
-                      <span style={{ color: pt.color, fontWeight: 700 }}>{pt.abbr}:</span>
-                      {Object.entries(pt.outcomes).filter(([, v]) => v && v !== '0%').map(([k, v]) => (
-                        <span key={k}>{k} {v}</span>
-                      ))}
-                    </div>
-                  ))}
-                </div>
+              {activeDotId?.plot === 'sz' && tooltipFields && tooltipPos && (
+                <PitchTooltip fields={tooltipFields} x={tooltipPos.x} y={tooltipPos.y} accentColor={tooltipColor} containerW={tooltipContainerW} containerH={tooltipContainerH} />
               )}
             </div>
 
-            {/* Right column: Movement Plot + Release Point */}
-            <div style={{ width: 220, minWidth: 220, display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div className="anim-slide-up anim-delay-6" style={{ flex: 1, background: 'var(--card-bg)', border: '1px solid var(--orange-border)', borderRadius: 8, padding: '16px', boxShadow: 'inset 0 0 20px rgba(224,172,68,0.04)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                <div style={secHead2}>MOVEMENT PLOT</div>
-                <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg viewBox="0 0 100 80" preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: '100%' }}>
-                    <line x1="10" y1="40" x2="90" y2="40" stroke="rgba(100,100,100,0.2)" strokeWidth="0.3" />
-                    <line x1="50" y1="5" x2="50" y2="75" stroke="rgba(100,100,100,0.2)" strokeWidth="0.3" />
-                    <text x="8" y="78" fill="var(--muted)" fontSize="6">H Break</text>
-                    <text x="52" y="8" fill="var(--muted)" fontSize="6">V Break</text>
-                    {filteredMovement.map((d, i) => (
-                      <circle key={i} cx={50 + d.x * 3} cy={40 - d.y * 2.5} r="1.4" fill={pitchColors[d.type] || '#888'} opacity="0.85">
-                        <animate attributeName="r" from="0" to="1.4" dur="0.3s" begin={`${i * 0.02}s`} fill="freeze" />
-                      </circle>
-                    ))}
-                  </svg>
-                </div>
+            {/* Movement Plot — HB vs IVB, skinnier */}
+            <div className="anim-slide-up anim-delay-6" ref={mvRef} style={{ flex: 0.7, background: 'var(--card-bg)', border: '1px solid var(--orange-border)', borderRadius: 8, padding: '16px', boxShadow: 'inset 0 0 20px rgba(224,172,68,0.04)', display: 'flex', flexDirection: 'column', minHeight: 0, position: 'relative' }} onClick={handleBgClick}>
+              <div style={secHead2}>MOVEMENT PLOT</div>
+              <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: '100%' }}>
+                  {[-20, -10, 0, 10, 20].map(v => {
+                    const svgX = 50 + (v / 25) * 40
+                    const svgY = 48 - (v / 25) * 40
+                    return (
+                      <g key={v}>
+                        <line x1={svgX} y1="8" x2={svgX} y2="88" stroke="rgba(80,80,80,0.12)" strokeWidth="0.25" />
+                        <line x1="10" y1={svgY} x2="90" y2={svgY} stroke="rgba(80,80,80,0.12)" strokeWidth="0.25" />
+                      </g>
+                    )
+                  })}
+                  <line x1="10" y1="48" x2="90" y2="48" stroke="rgba(120,120,120,0.3)" strokeWidth="0.35" />
+                  <line x1="50" y1="8" x2="50" y2="88" stroke="rgba(120,120,120,0.3)" strokeWidth="0.35" />
+                  <text x="50" y="96" fill="var(--muted)" fontSize="4.5" textAnchor="middle" fontWeight="600">HB (in)</text>
+                  <text x="3" y="48" fill="var(--muted)" fontSize="4.5" textAnchor="middle" fontWeight="600" transform="rotate(-90, 3, 48)">IVB (in)</text>
+                  {[-20, -10, 0, 10, 20].map(v => (
+                    <g key={`t${v}`}>
+                      <text x={50 + (v / 25) * 40} y="92" fill="var(--muted)" fontSize="3.5" textAnchor="middle">{v}</text>
+                      <text x="8" y={49 - (v / 25) * 40} fill="var(--muted)" fontSize="3.5" textAnchor="end">{v}</text>
+                    </g>
+                  ))}
+                  {filteredMovement.map((d, i) => {
+                    const cx = 50 + (d.x / 25) * 40
+                    const cy = 48 - (d.y / 25) * 40
+                    const { isHovered, isSelected, hasSelection } = dotState('mv', i)
+                    const r = dotRadius(1.3, isHovered, isSelected)
+                    const op = dotOpacity(isHovered, isSelected, hasSelection)
+                    const st = dotStroke(isHovered, isSelected)
+                    return (
+                      <circle
+                        key={i} cx={cx} cy={cy} r={r}
+                        fill={pitchColors[d.type] || '#888'}
+                        opacity={op}
+                        style={{ cursor: 'pointer', transition: 'r 0.15s, opacity 0.15s' }}
+                        {...st}
+                        onMouseEnter={e => handleDotEnter('mv', i, e, mvRef.current)}
+                        onMouseLeave={handleDotLeave}
+                        onClick={e => handleDotClick('mv', i, e, mvRef.current)}
+                      />
+                    )
+                  })}
+                </svg>
               </div>
-              <div className="anim-slide-up anim-delay-7" style={{ height: 90, background: 'var(--card-bg)', border: '1px solid var(--orange-border)', borderRadius: 8, padding: '16px', boxShadow: 'inset 0 0 20px rgba(224,172,68,0.04)', flexShrink: 0 }}>
-                <div style={secHead2}>RELEASE POINT</div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 40 }}>
-                  <svg viewBox="0 0 60 30" style={{ width: '100%' }}>
-                    {pitcher.releaseDots.map((d, i) => (
-                      <circle key={i} cx={d.cx} cy={d.cy} r={d.r} fill="var(--accent)" opacity={d.opacity} />
-                    ))}
-                  </svg>
-                </div>
+              {activeDotId?.plot === 'mv' && tooltipFields && tooltipPos && (
+                <PitchTooltip fields={tooltipFields} x={tooltipPos.x} y={tooltipPos.y} accentColor={tooltipColor} containerW={tooltipContainerW} containerH={tooltipContainerH} />
+              )}
+            </div>
+
+            {/* Release Point — clean chart, no stick figure */}
+            <div className="anim-slide-up anim-delay-7" ref={rpRef} style={{ flex: 0.6, background: 'var(--card-bg)', border: '1px solid var(--orange-border)', borderRadius: 8, padding: '16px', boxShadow: 'inset 0 0 20px rgba(224,172,68,0.04)', display: 'flex', flexDirection: 'column', minHeight: 0, position: 'relative' }} onClick={handleBgClick}>
+              <div style={secHead2}>RELEASE POINT</div>
+              <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: '100%' }}>
+                  {/* Grid lines */}
+                  {[-2, -1, 0, 1, 2].map(v => {
+                    const svgX = 50 + (v / 3) * 38
+                    return <line key={`vg${v}`} x1={svgX} y1="10" x2={svgX} y2="90" stroke="rgba(80,80,80,0.1)" strokeWidth="0.25" />
+                  })}
+                  {[4, 5, 6].map(v => {
+                    const svgY = 90 - ((v - 3) / 4) * 80
+                    return <line key={`hg${v}`} x1="12" y1={svgY} x2="88" y2={svgY} stroke="rgba(80,80,80,0.1)" strokeWidth="0.25" />
+                  })}
+                  {/* Crosshair at typical release area */}
+                  <line x1="12" y1="30" x2="88" y2="30" stroke="rgba(120,120,120,0.15)" strokeWidth="0.25" strokeDasharray="2,2" />
+                  <line x1="63" y1="10" x2="63" y2="90" stroke="rgba(120,120,120,0.15)" strokeWidth="0.25" strokeDasharray="2,2" />
+                  {/* Axis labels */}
+                  <text x="50" y="97" fill="var(--muted)" fontSize="4" textAnchor="middle" fontWeight="600">HORIZ. OFFSET (ft)</text>
+                  <text x="5" y="50" fill="var(--muted)" fontSize="4" textAnchor="middle" fontWeight="600" transform="rotate(-90, 5, 50)">HEIGHT (ft)</text>
+                  {/* Tick labels */}
+                  {[-2, -1, 0, 1, 2].map(v => (
+                    <text key={`xt${v}`} x={50 + (v / 3) * 38} y="93" fill="var(--muted)" fontSize="3.5" textAnchor="middle">{v}</text>
+                  ))}
+                  {[3, 4, 5, 6, 7].map(v => (
+                    <text key={`yt${v}`} x="10" y={91 - ((v - 3) / 4) * 80} fill="var(--muted)" fontSize="3.5" textAnchor="end">{v}</text>
+                  ))}
+                  {/* Data dots */}
+                  {filteredRelease.map((d, i) => {
+                    const cx = 50 + (d.cx / 3) * 38
+                    const cy = 90 - ((d.cy - 3) / 4) * 80
+                    const { isHovered, isSelected, hasSelection } = dotState('rp', i)
+                    const r = dotRadius(2.2, isHovered, isSelected)
+                    const op = dotOpacity(isHovered, isSelected, hasSelection) * d.opacity
+                    const st = dotStroke(isHovered, isSelected)
+                    return (
+                      <circle
+                        key={i} cx={cx} cy={cy} r={r}
+                        fill={pitchColors[d.type] || 'var(--accent)'}
+                        opacity={op}
+                        style={{ cursor: 'pointer', transition: 'r 0.15s, opacity 0.15s' }}
+                        {...st}
+                        onMouseEnter={e => handleDotEnter('rp', i, e, rpRef.current)}
+                        onMouseLeave={handleDotLeave}
+                        onClick={e => handleDotClick('rp', i, e, rpRef.current)}
+                      />
+                    )
+                  })}
+                </svg>
               </div>
+              {activeDotId?.plot === 'rp' && tooltipFields && tooltipPos && (
+                <PitchTooltip fields={tooltipFields} x={tooltipPos.x} y={tooltipPos.y} accentColor={tooltipColor} containerW={tooltipContainerW} containerH={tooltipContainerH} />
+              )}
             </div>
           </div>
 

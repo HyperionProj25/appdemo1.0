@@ -21,11 +21,28 @@ export interface ContactDot {
   x: number
   y: number
   type: 'popup' | 'linedrive' | 'flyball' | 'groundball'
+  dir: number // spray direction degrees (-45 to 45)
 }
 
 export interface SprayZone {
   label: string
   pct: number
+}
+
+// Spray zone direction ranges (degrees, -90 to 90 — matches real Trackman Direction field)
+export const SPRAY_ZONES = [
+  { key: 'LF',  label: 'LF',  min: -90, max: -54 },
+  { key: 'LCF', label: 'LCF', min: -54, max: -18 },
+  { key: 'CF',  label: 'CF',  min: -18, max: 18 },
+  { key: 'RCF', label: 'RCF', min: 18,  max: 54 },
+  { key: 'RF',  label: 'RF',  min: 54,  max: 90 },
+] as const
+
+export function getSprayZone(dir: number): string {
+  for (const z of SPRAY_ZONES) {
+    if (dir >= z.min && dir < z.max) return z.key
+  }
+  return dir >= 90 ? 'RF' : 'LF'
 }
 
 export interface BatterStats {
@@ -65,6 +82,21 @@ export interface PitchTypeStats {
   outcomes: { GB: string; PU: string; FB: string; LD: string }
 }
 
+export interface PitchDot {
+  x: number; y: number; type: string
+  velo: number; spin: number; vBreak: number; hBreak: number
+}
+
+export interface MovementDot {
+  x: number; y: number; type: string
+  velo: number; spin: number
+}
+
+export interface ReleaseDot {
+  cx: number; cy: number; r: number; opacity: number
+  type: string; velo: number
+}
+
 export interface PitcherStats {
   id: string
   name: string
@@ -74,10 +106,12 @@ export interface PitcherStats {
   pitches: number
   trainingPitchTypes: PitchTypeStats[]
   livePitchTypes: PitchTypeStats[]
-  trainingDots: { x: number; y: number; type: string }[]
-  liveDots: { x: number; y: number; type: string }[]
-  movementDots: { x: number; y: number; type: string }[]
-  releaseDots: { cx: number; cy: number; r: number; opacity: number }[]
+  trainingDots: PitchDot[]
+  liveDots: PitchDot[]
+  trainingMovementDots: MovementDot[]
+  liveMovementDots: MovementDot[]
+  trainingReleaseDots: ReleaseDot[]
+  liveReleaseDots: ReleaseDot[]
   fbVeloTrend: { date: string; value: number }[]
   usageTrend: { date: string; value: number }[]
   weakContactTrend: { date: string; value: number }[]
@@ -97,29 +131,103 @@ function hitTypeFromLA(la: number): 'popup' | 'linedrive' | 'flyball' | 'groundb
   return 'popup'
 }
 
-function generateScatterDots(seed: number, count: number, avgEV: number, maxEV: number): ScatterDot[] {
+// Unified swing generation — one swing produces both a scatter dot and a contact dot
+// with consistent type, direction, and correlated positions.
+// All values match real Trackman ranges from CSM/West Valley data.
+interface Swing {
+  ev: number; la: number; dir: number
+  type: 'popup' | 'linedrive' | 'flyball' | 'groundball'
+  plateLocS: number  // feet, -1.8 to 1.8 (PlateLocSide)
+  plateLocH: number  // feet, 0.5 to 4.5 (PlateLocHeight)
+  contactX: number   // feet, -1.5 to 1.5 (ContactPositionX — horizontal)
+  contactY: number   // feet, 1.5 to 3.5 (ContactPositionY — depth in front of plate)
+}
+
+function generateSwings(seed: number, count: number, avgEV: number, maxEV: number): Swing[] {
   const r = seeded(seed)
   return Array.from({ length: count }, () => {
-    const ev = avgEV - 15 + r() * (maxEV - avgEV + 20)
-    const la = -15 + r() * 65 // -15 to 50 degrees
-    const dir = -45 + r() * 90 // -45 to 45 degrees
+    // Plate location — where the pitch crossed the zone (real Trackman units: feet)
+    // PlateLocSide: P5=-1.0, P95=1.0, full range -1.8 to 1.8
+    const plateLocS = +(Math.max(-1.8, Math.min(1.8, (r() - 0.5) * 2.4 + (r() - 0.5) * 0.6))).toFixed(2)
+    // PlateLocHeight: P5=1.21, P95=3.80, full range 0.2 to 4.5
+    const plateLocH = +(Math.max(0.5, Math.min(4.5, 0.8 + r() * 3.2 + (r() - 0.5) * 0.5))).toFixed(2)
+
+    // Exit velocity — real range 67-115 mph, mean ~88
+    const ev = +(Math.max(65, Math.min(115, avgEV - 12 + r() * (maxEV - avgEV + 18)))).toFixed(1)
+
+    // Launch angle — influenced by pitch height (low pitch → groundball, high → fly)
+    // Real range: -20 to 80, mean ~14, std ~20
+    const heightInfluence = (plateLocH - 2.5) * 10
+    const la = +(Math.max(-20, Math.min(80, heightInfluence + (r() * 70 - 25)))).toFixed(1)
+
     const type = hitTypeFromLA(la)
-    // map ev to x: min ~60mph → x=10, max ~110mph → x=90
-    const x = 10 + ((ev - 60) / 50) * 80
-    // map la to y: -15° → y=80, 50° → y=8
-    const y = 80 - ((la + 15) / 65) * 72
-    return { x: Math.max(12, Math.min(88, x)), y: Math.max(8, Math.min(82, y)), ev: +ev.toFixed(1), la: +la.toFixed(1), type, dir: +dir.toFixed(1) }
+
+    // Spray direction — real Trackman range: -90 to +90 degrees, std ~38
+    // Inside pitches (negative PlateLocSide for RHH) tend to get pulled
+    const locInfluence = -plateLocS * 20
+    const typeNoise = type === 'popup' ? (r() * 140 - 70) : (r() * 100 - 50)
+    const dir = +(Math.max(-90, Math.min(90, locInfluence + typeNoise))).toFixed(1)
+
+    // Contact position — real Trackman units (feet)
+    // ContactPositionX: -1.48 to 1.86, mean ~0, std ~0.55
+    const cpX = plateLocS * 0.3 + (r() * 0.8 - 0.4)
+    const contactX = +(Math.max(-1.5, Math.min(1.5, cpX))).toFixed(2)
+
+    // ContactPositionY (depth): 1.68 to 3.33, mean ~2.5, std ~0.28
+    // Pull = slightly more out front, oppo = deeper
+    const pullFactor = dir < 0 ? 0.1 : -0.1
+    const cpY = 2.5 + pullFactor + (r() * 0.9 - 0.45)
+    const contactY = +(Math.max(1.7, Math.min(3.3, cpY))).toFixed(2)
+
+    return { ev, la, type, dir, plateLocS, plateLocH, contactX, contactY }
   })
 }
 
-function generateContactDots(seed: number, count: number): ContactDot[] {
-  const r = seeded(seed)
-  const types: ('popup' | 'linedrive' | 'flyball' | 'groundball')[] = ['popup', 'linedrive', 'flyball', 'groundball']
-  return Array.from({ length: count }, () => ({
-    x: 30 + r() * 45,
-    y: 8 + r() * 70,
-    type: types[Math.floor(r() * 4)],
+function swingsToScatter(swings: Swing[]): ScatterDot[] {
+  return swings.map(s => ({
+    // Map PlateLocSide to SVG x: -2ft → x=10, +2ft → x=90
+    x: +(Math.max(12, Math.min(88, 50 + s.plateLocS * 20))).toFixed(1),
+    // Map PlateLocHeight to SVG y: 0ft → y=77, 4.5ft → y=5 (inverted)
+    y: +(Math.max(7, Math.min(80, 77 - (s.plateLocH / 4.5) * 72))).toFixed(1),
+    ev: s.ev, la: s.la, type: s.type, dir: s.dir,
   }))
+}
+
+function swingsToContact(swings: Swing[]): ContactDot[] {
+  return swings.map(s => ({
+    // Map ContactPositionX to SVG x: -1.5ft → x=20, +1.5ft → x=80
+    x: +(Math.max(20, Math.min(80, 50 + s.contactX * 20))).toFixed(1),
+    // Map ContactPositionY (depth) to SVG y: 3.5ft → y=10, 1.5ft → y=75 (inverted)
+    y: +(Math.max(10, Math.min(75, 75 - ((s.contactY - 1.5) / 2.0) * 65))).toFixed(1),
+    type: s.type, dir: s.dir,
+  }))
+}
+
+// Compute spray zone percentages from actual dot data
+function computeSpray(dots: ScatterDot[]): { outfield: SprayZone[]; infield: SprayZone[] } {
+  const of: Record<string, number> = { LF: 0, LCF: 0, CF: 0, RCF: 0, RF: 0 }
+  const inf: Record<string, number> = { LS: 0, M: 0, RS: 0 }
+
+  dots.forEach(d => {
+    of[getSprayZone(d.dir)]++
+    if (d.type === 'groundball') {
+      if (d.dir < -30) inf.LS++
+      else if (d.dir < 30) inf.M++
+      else inf.RS++
+    }
+  })
+
+  const totalOF = Object.values(of).reduce((a, b) => a + b, 0) || 1
+  const totalIF = Object.values(inf).reduce((a, b) => a + b, 0) || 1
+
+  return {
+    outfield: SPRAY_ZONES.map(z => ({ label: z.key, pct: +((of[z.key] / totalOF) * 100).toFixed(1) })),
+    infield: [
+      { label: 'LS', pct: +((inf.LS / totalIF) * 100).toFixed(1) },
+      { label: 'M', pct: +((inf.M / totalIF) * 100).toFixed(1) },
+      { label: 'RS', pct: +((inf.RS / totalIF) * 100).toFixed(1) },
+    ],
+  }
 }
 
 function pctFromDots(dots: ScatterDot[]): { popup: number; linedrive: number; flyball: number; groundball: number } {
@@ -140,46 +248,33 @@ function makeBatter(
   id: string, name: string, avgEV: number, maxEV: number, avgLA: number,
   avgBS: number, swings: number, hardHitPct: number, seed: number
 ): BatterStats {
-  const tDots = generateScatterDots(seed, swings, avgEV, maxEV)
-  const lDots = generateScatterDots(seed + 500, Math.max(14, swings - 6), avgEV + 2, maxEV + 3)
-  const tCon = generateContactDots(seed + 100, swings - 2)
-  const lCon = generateContactDots(seed + 600, Math.max(12, swings - 8))
+  // Unified swing data — each swing produces both scatter + contact dots with matching type/dir
+  const tSwings = generateSwings(seed, swings, avgEV, maxEV)
+  const lSwings = generateSwings(seed + 500, Math.max(14, swings - 6), avgEV + 2, maxEV + 3)
+  const tDots = swingsToScatter(tSwings)
+  const lDots = swingsToScatter(lSwings)
+  const tCon = swingsToContact(tSwings)
+  const lCon = swingsToContact(lSwings)
   const hitTypes = pctFromDots(tDots)
-  const r = seeded(seed + 200)
 
+  // Spray percentages computed from actual dot data
+  const tSpray = computeSpray(tDots)
+  const lSpray = computeSpray(lDots)
+
+  const r = seeded(seed + 200)
   const dates = ['9/13', '9/16', '9/25', '10/1', '10/10', '10/13', '10/18', '10/25', '11/1', '11/14']
   const evTrend = dates.map(d => ({ date: d, value: +(avgEV - 4 + r() * 12).toFixed(1) }))
   const laTrend = dates.map(d => ({ date: d, value: +(avgLA - 5 + r() * 14).toFixed(1) }))
   const outcomeTrend = dates.map(d => ({ date: d, value: +(20 + r() * 30).toFixed(1) }))
 
-  // Spray distribution from seed
-  const ofPcts = [r() * 20 + 70, r() * 25 + 65, r() * 20 + 60, r() * 25 + 65, r() * 20 + 70]
-  const ifPcts = [r() * 30 + 40, r() * 30 + 50, r() * 30 + 40]
-  const lOfPcts = [r() * 30 + 55, r() * 30 + 60, r() * 25 + 50, r() * 30 + 65, r() * 25 + 55]
-  const lIfPcts = [r() * 30 + 35, r() * 30 + 45, r() * 30 + 35]
-
   return {
     id, name, avgEV, maxEV, avgLA, avgBS, swings, hardHitPct, hitTypes,
     trainingDots: tDots, liveDots: lDots,
     trainingContact: tCon, liveContact: lCon,
-    outfieldSpray: [
-      { label: 'LF', pct: +ofPcts[0].toFixed(1) }, { label: 'LCF', pct: +ofPcts[1].toFixed(1) },
-      { label: 'CF', pct: +ofPcts[2].toFixed(1) }, { label: 'RCF', pct: +ofPcts[3].toFixed(1) },
-      { label: 'RF', pct: +ofPcts[4].toFixed(1) },
-    ],
-    infieldSpray: [
-      { label: 'LS', pct: +ifPcts[0].toFixed(1) }, { label: 'M', pct: +ifPcts[1].toFixed(1) },
-      { label: 'RS', pct: +ifPcts[2].toFixed(1) },
-    ],
-    liveOutfieldSpray: [
-      { label: 'LF', pct: +lOfPcts[0].toFixed(1) }, { label: 'LCF', pct: +lOfPcts[1].toFixed(1) },
-      { label: 'CF', pct: +lOfPcts[2].toFixed(1) }, { label: 'RCF', pct: +lOfPcts[3].toFixed(1) },
-      { label: 'RF', pct: +lOfPcts[4].toFixed(1) },
-    ],
-    liveInfieldSpray: [
-      { label: 'LS', pct: +lIfPcts[0].toFixed(1) }, { label: 'M', pct: +lIfPcts[1].toFixed(1) },
-      { label: 'RS', pct: +lIfPcts[2].toFixed(1) },
-    ],
+    outfieldSpray: tSpray.outfield,
+    infieldSpray: tSpray.infield,
+    liveOutfieldSpray: lSpray.outfield,
+    liveInfieldSpray: lSpray.infield,
     evTrend, laTrend, outcomeTrend,
   }
 }
@@ -205,41 +300,126 @@ export const batterStats: Record<string, BatterStats> = {
 
 // ── Pitcher database ────────────────────────────────────────────────────────
 
+// Unified per-pitch data — one pitch produces consistent dots for all three charts
+interface UnifiedPitch {
+  type: string        // pitch type abbr (FB, CB, CH, SL, CT)
+  plateLocS: number   // PlateLocSide in feet (-1.8 to 1.8)
+  plateLocH: number   // PlateLocHeight in feet (0.5 to 4.5)
+  velo: number        // pitch velocity mph
+  spin: number        // spin rate rpm
+  vBreak: number      // vertical break (inches)
+  hBreak: number      // horizontal break (inches)
+  relX: number        // release horizontal offset (feet)
+  relY: number        // release height (feet)
+}
+
+function generateUnifiedPitches(
+  r: () => number,
+  count: number,
+  pitchTypes: PitchTypeStats[],
+  baseRelX: number,
+  baseRelY: number,
+): UnifiedPitch[] {
+  // Build cumulative usage weights for weighted pitch selection
+  const totalUsage = pitchTypes.reduce((s, pt) => s + pt.usage, 0)
+  const cumWeights = pitchTypes.map((pt, i) =>
+    pitchTypes.slice(0, i + 1).reduce((s, p) => s + p.usage, 0) / totalUsage
+  )
+
+  return Array.from({ length: count }, () => {
+    // Pick pitch type weighted by usage percentage
+    const roll = r()
+    const ptIdx = cumWeights.findIndex(w => roll <= w)
+    const pt = pitchTypes[ptIdx >= 0 ? ptIdx : 0]
+
+    // Plate location — real Trackman ranges
+    const plateLocS = +(Math.max(-1.8, Math.min(1.8, (r() - 0.5) * 2.4 + (r() - 0.5) * 0.6))).toFixed(2)
+    const plateLocH = +(Math.max(0.5, Math.min(4.5, 0.8 + r() * 3.2 + (r() - 0.5) * 0.5))).toFixed(2)
+
+    // Per-pitch jitter on velo, spin, break from the pitch type's averages
+    const velo = +(pt.velo + (r() * 4 - 2)).toFixed(1)
+    const spin = +(pt.spin + (r() * 200 - 100))
+    const vBreak = +(+pt.vBreak + (r() * 3 - 1.5)).toFixed(1)
+    const hBreak = +(+pt.hBreak + (r() * 3 - 1.5)).toFixed(1)
+
+    // Release point — tight cluster around pitcher's base with slight per-pitch variation
+    // Different pitch types can have slightly different release points
+    const typeRelXShift = pt.abbr === 'CB' ? -0.05 : pt.abbr === 'CH' ? 0.03 : 0
+    const typeRelYShift = pt.abbr === 'CB' ? -0.04 : pt.abbr === 'SL' ? -0.02 : 0
+    const relX = +(baseRelX + typeRelXShift + (r() * 0.3 - 0.15)).toFixed(2)
+    const relY = +(baseRelY + typeRelYShift + (r() * 0.2 - 0.1)).toFixed(2)
+
+    return { type: pt.abbr, plateLocS, plateLocH, velo, spin, vBreak, hBreak, relX, relY }
+  })
+}
+
+// Derive chart-specific dot arrays from unified pitches
+function pitchesToStrikeZone(pitches: UnifiedPitch[]): PitchDot[] {
+  return pitches.map(p => ({
+    x: +(Math.max(12, Math.min(88, 50 + p.plateLocS * 20))).toFixed(1),
+    y: +(Math.max(7, Math.min(80, 77 - (p.plateLocH / 4.5) * 72))).toFixed(1),
+    type: p.type,
+    velo: p.velo, spin: p.spin, vBreak: p.vBreak, hBreak: p.hBreak,
+  }))
+}
+
+function pitchesToMovement(pitches: UnifiedPitch[]): MovementDot[] {
+  return pitches.map(p => ({
+    x: p.hBreak,
+    y: p.vBreak,
+    type: p.type,
+    velo: p.velo,
+    spin: p.spin,
+  }))
+}
+
+function pitchesToRelease(pitches: UnifiedPitch[]): ReleaseDot[] {
+  return pitches.map(p => ({
+    cx: p.relX,
+    cy: p.relY,
+    r: 0.07,
+    opacity: 0.75,
+    type: p.type,
+    velo: p.velo,
+  }))
+}
+
 function makePitcher(
   id: string, name: string, avgFB: number, maxFB: number, avgBS: number,
   pitches: number, seed: number
 ): PitcherStats {
   const r = seeded(seed)
 
+  // Realistic MLB-scale pitch type stats (IVB/HB in inches, RHP catcher's view)
   const trainingPitchTypes: PitchTypeStats[] = [
     {
       abbr: 'FB', name: 'Fastball', usage: +(55 + r() * 15).toFixed(1), color: '#4caf50',
-      velo: +(avgFB - 1 + r() * 2).toFixed(2), vBreak: +(-3.5 - r() * 2).toFixed(1),
-      hBreak: +(r() * 3 - 0.5).toFixed(1), spin: +(2200 + r() * 400).toFixed(0) as unknown as number,
+      velo: +(avgFB - 1 + r() * 2).toFixed(2), vBreak: +(15 + r() * 4).toFixed(1),
+      hBreak: +(-5 - r() * 4).toFixed(1), spin: +(2200 + r() * 400).toFixed(0) as unknown as number,
       outcomes: { GB: '35%', PU: '10%', FB: '30%', LD: '25%' },
     },
     {
       abbr: 'CB', name: 'Curveball', usage: +(18 + r() * 10).toFixed(1), color: '#f44336',
       velo: +(avgFB - 14 + r() * 4).toFixed(2), vBreak: +(-7 - r() * 4).toFixed(1),
-      hBreak: +(-1 - r() * 2).toFixed(1), spin: +(2100 + r() * 400).toFixed(0) as unknown as number,
+      hBreak: +(5 + r() * 5).toFixed(1), spin: +(2100 + r() * 400).toFixed(0) as unknown as number,
       outcomes: { GB: '40%', PU: '15%', FB: '25%', LD: '20%' },
     },
     {
       abbr: 'CH', name: 'Changeup', usage: +(12 + r() * 8).toFixed(1), color: '#ffc107',
-      velo: +(avgFB - 10 + r() * 4).toFixed(2), vBreak: +(-5 - r() * 3).toFixed(1),
-      hBreak: +(-2 - r() * 2).toFixed(1), spin: +(1600 + r() * 400).toFixed(0) as unknown as number,
+      velo: +(avgFB - 10 + r() * 4).toFixed(2), vBreak: +(5 + r() * 3).toFixed(1),
+      hBreak: +(-8 - r() * 6).toFixed(1), spin: +(1600 + r() * 400).toFixed(0) as unknown as number,
       outcomes: { GB: '45%', PU: '5%', FB: '20%', LD: '30%' },
     },
     {
       abbr: 'SL', name: 'Slider', usage: +(8 + r() * 8).toFixed(1), color: '#2196f3',
-      velo: +(avgFB - 8 + r() * 3).toFixed(2), vBreak: +(-5 - r() * 3).toFixed(1),
-      hBreak: +(-3 - r() * 4).toFixed(1), spin: +(2300 + r() * 300).toFixed(0) as unknown as number,
+      velo: +(avgFB - 8 + r() * 3).toFixed(2), vBreak: +(0 + r() * 3).toFixed(1),
+      hBreak: +(3 + r() * 4).toFixed(1), spin: +(2300 + r() * 300).toFixed(0) as unknown as number,
       outcomes: { GB: '38%', PU: '12%', FB: '28%', LD: '22%' },
     },
     {
       abbr: 'CT', name: 'Cutter', usage: +(3 + r() * 6).toFixed(1), color: '#9c27b0',
-      velo: +(avgFB - 4 + r() * 2).toFixed(2), vBreak: +(-3 - r() * 2).toFixed(1),
-      hBreak: +(-1 - r() * 3).toFixed(1), spin: +(2250 + r() * 350).toFixed(0) as unknown as number,
+      velo: +(avgFB - 4 + r() * 2).toFixed(2), vBreak: +(6 + r() * 3).toFixed(1),
+      hBreak: +(0.5 + r() * 2).toFixed(1), spin: +(2250 + r() * 350).toFixed(0) as unknown as number,
       outcomes: { GB: '42%', PU: '8%', FB: '25%', LD: '25%' },
     },
   ]
@@ -257,33 +437,24 @@ function makePitcher(
     },
   }))
 
-  // Strike zone dots for session analysis
-  const pitchTypeAbbrs = ['FB', 'CB', 'CH', 'SL', 'CT']
-  const trainingDots = Array.from({ length: pitches }, () => ({
-    x: 20 + r() * 60, y: 12 + r() * 70, type: pitchTypeAbbrs[Math.floor(r() * 5)],
-  }))
-  const liveDots = Array.from({ length: Math.max(20, pitches + 12) }, () => ({
-    x: 22 + r() * 56, y: 14 + r() * 66, type: pitchTypeAbbrs[Math.floor(r() * 5)],
-  }))
+  // Pitcher's base release point — consistent across all pitches, slight per-type shifts
+  const baseRelX = +(1.4 + r() * 0.8).toFixed(2) // RHP releases ~1.4-2.2 ft to arm side
+  const baseRelY = +(5.4 + r() * 0.8).toFixed(2) // typical 5.4-6.2 ft release height
 
-  // Movement plot dots (hBreak vs vBreak)
-  const movementDots = Array.from({ length: pitches }, () => {
-    const pitchIdx = Math.floor(r() * 5)
-    const pt = trainingPitchTypes[pitchIdx]
-    return {
-      x: pt.hBreak + (r() * 4 - 2),
-      y: Math.abs(pt.vBreak) + (r() * 3 - 1.5),
-      type: pt.abbr,
-    }
-  })
+  // Generate unified pitch arrays — each pitch has strike zone + movement + release data
+  const rTrain = seeded(seed + 100)
+  const trainingPitches = generateUnifiedPitches(rTrain, pitches, trainingPitchTypes, baseRelX, baseRelY)
 
-  // Release point cluster
-  const releaseDots = Array.from({ length: 8 }, () => ({
-    cx: 28 + r() * 6,
-    cy: 12 + r() * 8,
-    r: 1.5 + r() * 2,
-    opacity: 0.4 + r() * 0.5,
-  }))
+  const rLive = seeded(seed + 600)
+  const livePitches = generateUnifiedPitches(rLive, Math.max(20, pitches + 12), livePitchTypes, baseRelX, baseRelY)
+
+  // Derive all chart dot arrays from the same unified pitch data
+  const trainingDots = pitchesToStrikeZone(trainingPitches)
+  const liveDots = pitchesToStrikeZone(livePitches)
+  const trainingMovementDots = pitchesToMovement(trainingPitches)
+  const liveMovementDots = pitchesToMovement(livePitches)
+  const trainingReleaseDots = pitchesToRelease(trainingPitches)
+  const liveReleaseDots = pitchesToRelease(livePitches)
 
   const dates = ['9/13', '9/16', '9/25', '10/1', '10/10', '10/13', '10/18', '10/25', '11/1', '11/14']
   const fbVeloTrend = dates.map(d => ({ date: d, value: +(avgFB - 3 + r() * 8).toFixed(1) }))
@@ -293,7 +464,9 @@ function makePitcher(
   return {
     id, name, avgFB, maxFB, avgBS, pitches,
     trainingPitchTypes, livePitchTypes,
-    trainingDots, liveDots, movementDots, releaseDots,
+    trainingDots, liveDots,
+    trainingMovementDots, liveMovementDots,
+    trainingReleaseDots, liveReleaseDots,
     fbVeloTrend, usageTrend, weakContactTrend,
   }
 }
@@ -328,6 +501,13 @@ export const pitchColors: Record<string, string> = {
   CH: '#ffc107',
   SL: '#2196f3',
   CT: '#9c27b0',
+}
+
+// Map pitching coach staff IDs → player IDs for navigation to pitcher profile
+export const staffToPlayerMap: Record<string, string> = {
+  P001: '3000002', P002: '3000003', P003: '3000004', P004: '3000005',
+  P005: '3000006', P006: '3000007', P007: '3000008', P008: '3000009',
+  P009: '3000010', P010: '3000011', P011: '3000012', P012: '3000013',
 }
 
 // ── Benchmark data for RadarChart ───────────────────────────────────────────

@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Sparkline from '../../components/Sparkline'
 import { pitchingStaff, type Pitcher } from '../../data/pitchingStaff'
+import { staffToPlayerMap } from '../../data/csvStats'
 
 const generateTrend = (base: number, variance: number): number[] => {
   const result: number[] = []
@@ -16,6 +18,7 @@ type RoleFilter = 'all' | 'SP' | 'RP' | 'CL'
 type SortKey = 'name' | 'era' | 'whip' | 'kPer9' | 'bbPer9' | 'ip' | 'stuffPlus'
 
 export default function PitchingCoachStaff() {
+  const navigate = useNavigate()
   const [filter, setFilter] = useState<RoleFilter>('all')
   const [sortBy, setSortBy] = useState<SortKey>('stuffPlus')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
@@ -137,6 +140,7 @@ export default function PitchingCoachStaff() {
             {sorted.map((p, i) => (
               <tr key={p.id}
                 style={{ borderBottom: i < sorted.length - 1 ? '1px solid var(--surface-tint-2)' : 'none', cursor: 'pointer' }}
+                onClick={() => { const pid = staffToPlayerMap[p.id]; if (pid) navigate(`/player/${pid}/pitching`) }}
                 onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-bg-subtle)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
